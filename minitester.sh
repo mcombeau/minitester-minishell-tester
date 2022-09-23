@@ -1,28 +1,28 @@
 #!bin/bash
+################## MINISHELL PATH ##################
+MINISHELL_PATH="../"
+MINISHELL_NAME="minishell"
 
-# MINISHELL-TESTER
-
+###################### COLORS ######################
 RESET="\e[0m"
+BOLD="\e[1m"
 BLACK="\e[30m"
 RED="\e[31m"
+BRED="\e[91m"
 GREEN="\e[32m"
+BGREEN="\e[92m"
 YELLOW="\e[33m"
+BYELLOW="\e[93m"
 BLUE="\e[34m"
+BBLUE="\e[94m"
 MAGENTA="\e[35m"
+BMAGENTA="\e[95m"
 CYAN="\e[36m"
+BCYAN="\e[96m"
 WHITE="\e[37m"
+BWHITE="\e[97m"
 
-BOLD="\e[1m"
-BOLDPLAIN="\e[1;0m"
-BOLDBLACK="\033[1m\033[30m"
-BOLDRED="\033[1m\033[31m"
-BOLDGREEN="\033[1m\033[32m"
-BOLDYELLOW="\033[1m\033[33m"
-BOLDBLUE="\033[1m\033[34m"
-BOLDMAGENTA="\033[1m\033[35m"
-BOLDCYAN="\033[1m\033[36m"
-BOLDWHITE="\033[1m\033[37m"
-
+#################### TEST FILES ####################
 M_OUT="./minitests/minishell_out"
 M_ERR="./minitests/minishell_err"
 M_ERR_CMP="./minitests/minishell_err_cmp"
@@ -35,31 +35,29 @@ B_EXT="./minitests/bash_exit"
 
 F_EXISTING="existing_file"
 F_TEST="test_file.txt"
+F_TEST_2="test_file_2.txt"
 F_TEST_OUT="outfile"
 F_TEST_OUT_M="outfile_minishell"
+F_TEST_OUT="outfile_2"
+F_TEST_OUT_M="outfile_2_minishell"
 F_EXECUTABLE="executable_file"
 F_FORBIDDEN="forbidden"
 D_EXISTS="existing_dir"
 
+#################### TEST COUNT ####################
 declare -i test_num=0
 declare -i total_tests=0
 declare -i tests_passed=0
 declare -i tests_failed=0
 
-# Compile and set executable rights
-printf $CYAN"Making minishell...\n"$RESET
-make -C ../ > /dev/null
-cp ../minishell .
-chmod 755 minishell
-printf $GREEN"Minishell ready.\n"$RESET
-
-
+################ TESTING FUNCTIONS #################
 function create_test_files()
 {
 	printf $CYAN"Creating test files...\n$RESET"
 	mkdir -p minitests
 	echo "This file exists and has normal permissions" > "$F_EXISTING"
 	echo -e "Take this kiss upon the brow!\nAnd, in parting from you now,\nThus much let me avow-\nYou are not wrong, who deem\nThat my days have been a dream;\nYet if hope has flown away\nIn a night, or in a day,\nIn a vision, or in none,\nIs it therefore the less gone?\nAll that we see or seem\nIs but a dream within a dream.\n\nI stand amid the roar\nOf a surf-tormented shore,\nAnd I hold within my hand\nGrains of the golden sand-\nHow few! yet how they creep\nThrough my fingers to the deep,\nWhile I weep- while I weep!\nO God! can I not grasp\nThem with a tighter clasp?\nO God! can I not save\nOne from the pitiless wave?\nIs all that we see or seem\nBut a dream within a dream?\n\nEdgar Allan Poe\nA Dream Within a Dream" > "$F_TEST"
+	man bash > "$F_TEST_2"
 	mkdir -p $D_EXISTS
 	echo -e "#!/bin/bash\nprintf \"hello world\"" > "$F_EXECUTABLE"
 	chmod 755 "$F_EXECUTABLE"
@@ -78,56 +76,87 @@ function remove_outfiles()
 	rm $F_TEST_OUT $F_TEST_OUT_BACKUP
 }
 
+function check_outfile()
+{
+	if cmp -s "$F_TEST_OUT_M" "$F_TEST_OUT"; then
+		printf "%s Outfile:$BOLD$GREEN OK \n$RESET" "----------"
+	else
+		printf "%s Outfile:$BOLD$RED KO \n$RESET" "----------"
+		printf "%s Outfile diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
+		diff --color "$F_TEST_OUT_M" "$F_TEST_OUT"
+		rm "$F_TEST_OUT" "$F_TEST_OUT"
+	fi
+}
+
+function output_ok()
+{
+	printf "$BOLD$GREEN%s$RESET" "[OK] "
+	printf "$CYAN [$@] $RESET"
+	tests_passed+=1
+}
+
+function output_ok_diff()
+{
+	printf "$BOLD$YELLOW%s$RESET" "[OK] "
+	printf "$CYAN [$@] $RESET"
+	tests_passed+=1
+	echo
+	printf "%s Output differs from Bash:$YELLOW OK" "----------"
+	if [[ "$@" == *'||'* ]]; then
+		printf ": minishell does not implement \"||\""
+	elif [[ "$@" == *';'* ]]; then
+		printf ": minishell does not implement \";\""
+	fi
+	printf "$RESET"
+}
+
+function output_fail()
+{
+	printf "$BOLD$RED%s$RESET" "[KO] "
+	printf "$CYAN [$@] $RESET"
+	tests_failed+=1
+	echo
+	if cmp -s "$M_OUT" "$B_OUT"; then
+		printf "%s STDOUT output:$BOLD$GREEN OK \n$RESET" "----------"
+	else
+		printf "%s STDOUT output:$BOLD$RED KO \n$RESET" "----------"
+		printf "%s STDOUT diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
+		diff --color "$M_OUT" "$B_OUT"
+		rm "$M_OUT" "$B_OUT"
+	fi
+	if cmp -s "$M_ERR_CMP" "$B_ERR_CMP"; then
+		printf "%s STDERR output:$BOLD$GREEN OK \n$RESET" "----------"
+	else
+		printf "%s STDERR output:$BOLD$RED KO \n$RESET" "----------"
+		printf "%s STDERR diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
+		diff --color "$M_ERR" "$B_ERR"
+		rm "$M_ERR" "$M_ERR_CMP" "$B_ERR" "$B_ERR_CMP"
+	fi
+	if cmp -s "$M_EXT" "$B_EXT"; then
+		printf "%s Exit status:$BOLD$GREEN OK \n$RESET" "----------"
+	else
+		printf "%s Exit status:$BOLD$RED KO \n$RESET" "----------"
+		printf "%s Exit diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
+		diff --color "$M_EXT" "$B_EXT"
+		rm "$M_EXT" "$B_EXT"
+	fi
+}
+
 function check_output()
 {
 	cat -e $M_ERR | head -1 | rev | cut -d ':' -f 1 | tr '[:upper:]' '[:lower:]' | rev >$M_ERR_CMP
 	cat -e $B_ERR | head -1 | rev | cut -d ':' -f 1 | tr '[:upper:]' '[:lower:]' | rev >$B_ERR_CMP
 		printf "%s\t" "$test_num"
-	if cmp -s "$M_OUT" "$B_OUT" && cmp -s "$M_ERR_CMP" "$B_ERR_CMP" && cmp -s "$M_EXT" "$B_EXT"; then
-		printf "$BOLDGREEN%s$RESET" "[OK] "
-		printf "$CYAN [$@] $RESET"
-		tests_passed+=1
+	if cmp -s "$M_OUT" "$B_OUT" && cmp -s "$M_EXT" "$B_EXT" && cmp -s "$M_ERR_CMP" "$B_ERR_CMP"; then
+		output_ok "$@"
+	elif cmp -s "$M_OUT" "$B_OUT" && cmp -s "$M_EXT" "$B_EXT" && grep -q "syntax error" "$M_ERR" && grep -q "syntax error" "$B_ERR"; then
+		output_ok "$@"
+	elif [[ "$@" == *'||'* ]] && grep -q "syntax error" "$M_ERR" && grep -q "2" "$M_EXT"; then
+		output_ok_diff "$@"
+	elif [[ "$@" == *';'* ]] && grep -q "command not found" "$M_ERR" && grep -q "127" "$M_EXT"; then
+		output_ok_diff "$@"
 	else
-		printf "$BOLDRED%s$RESET" "[KO] "
-		printf "$CYAN [$@] $RESET"
-		tests_failed+=1
-		echo
-		if cmp -s "$M_OUT" "$B_OUT"; then
-			printf "%s STDOUT output:$BOLDGREEN OK \n$RESET" "----------"
-		else
-			printf "%s STDOUT output:$BOLDRED KO \n$RESET" "----------"
-			printf "%s STDOUT diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
-			diff --color "$M_OUT" "$B_OUT"
-			rm "$M_OUT" "$B_OUT"
-		fi
-		if cmp -s "$M_ERR_CMP" "$B_ERR_CMP"; then
-			printf "%s STDERR output:$BOLDGREEN OK \n$RESET" "----------"
-		else
-			printf "%s STDERR output:$BOLDRED KO \n$RESET" "----------"
-			printf "%s STDERR diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
-			diff --color "$M_ERR_CMP" "$B_ERR_CMP"
-			rm "$M_ERR" "$M_ERR_CMP" "$B_ERR" "$B_ERR_CMP"
-		fi
-		if cmp -s "$M_EXT" "$B_EXT"; then
-			printf "%s Exit status:$BOLDGREEN OK \n$RESET" "----------"
-		else
-			printf "%s Exit status:$BOLDRED KO \n$RESET" "----------"
-			printf "%s Exit diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
-			diff --color "$M_EXT" "$B_EXT"
-			rm "$M_EXT" "$B_EXT"
-		fi
-	fi
-}
-
-function check_outfile()
-{
-	if cmp -s "$F_TEST_OUT_M" "$F_TEST_OUT"; then
-		printf "%s Outfile:$BOLDGREEN OK \n$RESET" "----------"
-	else
-		printf "%s Outfile:$BOLDRED KO \n$RESET" "----------"
-		printf "%s Outfile diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
-		diff --color "$F_TEST_OUT_M" "$F_TEST_OUT"
-		rm "$F_TEST_OUT" "$F_TEST_OUT"
+		output_fail "$@"
 	fi
 }
 
@@ -162,30 +191,42 @@ function exec_test_outfile()
 
 function print_h2()
 {
-	printf	"$BOLDMAGENTA\n"
-	printf	"%s\n" "-------------------------------------------------------------"
-	printf	"%35s\n" "$@"
-	printf	"%s\n$RESET" "-------------------------------------------------------------"
+	printf	"$BOLD$MAGENTA\n"
+	printf	"%s\n" "----------------------------------------------------------------"
+	printf	"%11c%s\n" " " "$@"
+	printf	"%s\n$RESET" "----------------------------------------------------------------"
 }
 
 function print_h3()
 {
 	echo
-	printf	"$BOLDYELLOW-----------%s$RESET\n" "$@"
+	printf	"$BOLD$YELLOW-----------%s$RESET\n" "$@"
 }
 
-printf "$BOLDMAGENTA __  __ _____ _   _ _____  _____ _    _ ______ _      _      \n"
-printf "|  \/  |_   _| \ | |_   _|/ ____| |  | |  ____| |    | |     \n"
-printf "| \  / | | | |  \| | | | | (___ | |__| | |__  | |    | |     \n"
-printf "| |\/| | | | | . \` | | |  \___ \|  __  |  __| | |    | |     \n"
-printf "| |  | |_| |_| |\  |_| |_ ____) | |  | | |____| |____| |____ \n"
-printf "|_|  |_|_____|_| \_|_____|_____/|_|  |_|______|______|______|\n$RESET"
-printf "\n"
+#################### BEGIN TESTS ####################
+remove_test_files
+printf "$BOLD$MAGENTA"
+printf	"%s\n" "----------------------------------------------------------------"
+echo '	 _   _  _  _  _  _  ___  ___  __  ___  ___  ___ '
+echo '	| \_/ || || \| || ||_ _|| __|/ _||_ _|| __|| o \'
+echo '	| \_/ || || \\ || | | | | _| \_ \ | | | _| |   /'
+echo '	|_| |_||_||_|\_||_| |_| |___||__/ |_| |___||_|\\'
+printf	"%s\n" "----------------------------------------------------------------"
+printf "$RESET"
+echo
+
+# Compile and set executable rights
+printf $CYAN"Making minishell...\n"$RESET
+make -C "$MINISHELL_PATH" >/dev/null
+cp "$MINISHELL_PATH$MINISHELL_NAME" .
+chmod 755 minishell
+printf $GREEN"Minishell ready.\n"$RESET
 
 create_test_files
 
 print_h2 "BASIC EXECUTION TESTS"
 
+#################################### BASIC EXEC
 print_h3 "BASIC EXECUTION"
 exec_test 'ls'
 exec_test 'ls -la'
@@ -207,8 +248,8 @@ exec_test './nonexistant_file'
 exec_test "./$F_EXECUTABLE"
 exec_test ".$F_EXECUTABLE"
 exec_test "$F_EXECUTABLE"
-test_num=0
 
+#################################### PIPES
 print_h3 "PIPE TESTS"
 exec_test 'ls -l | wc -l'
 exec_test "cat $F_TEST | grep dream"
@@ -222,11 +263,10 @@ exec_test "cat $F_TEST | grep dream | x | wc -l"
 exec_test 'cat /dev/random | head -c 100 | wc -c'
 exec_test 'ls | ls | ls'
 exec_test 'ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls'
-test_num=0
 
 print_h2 "BUILTIN TESTS"
 
-# ECHO TESTS
+#################################### ECHO
 print_h3 "ECHO"
 exec_test 'echo'
 exec_test 'Echo'
@@ -242,9 +282,17 @@ exec_test 'echo -n -n -nnnn -nnnnm'
 exec_test 'echo a	-nnnnma'
 exec_test 'echo -n -nnn hello -n'
 exec_test 'echo a	hello -na'
-test_num=0
 
-# CD TESTS
+#################################### PWD
+print_h3 "PWD"
+exec_test 'pwd'
+exec_test 'Pwd'
+exec_test 'PWD'
+exec_test 'pwd hello'
+exec_test 'pwd 123'
+exec_test 'pwd 1 2 x 3 hello'
+
+#################################### CD
 print_h3 "CD"
 exec_test 'CD ..'
 exec_test 'cd ..'
@@ -253,17 +301,16 @@ exec_test 'cd'
 exec_test 'pwd'
 exec_test 'cd /Users'
 exec_test 'pwd'
-test_num=0
 
-# ENV TESTS
+#################################### ENV
 print_h3 "ENV"
 exec_test 'env | wc -l'
 exec_test 'Env | wc -l'
 exec_test 'ENV | wc -l'
 exec_test 'env | grep PATH'
-test_num=0
 
-# EXIT
+
+#################################### EXIT
 print_h3 "EXIT"
 exec_test "exit"
 exec_test "Exit"
@@ -301,22 +348,36 @@ exec_test "exit abc 12 | ls"
 #exec_test "ls > file | exit"
 #exec_test "sleep 2 | exit"
 #exec_test "ls -l > x | exit | wc -l"
-test_num=0
 
 # TODO: Find a way to test EXPORT and UNSET, as well as better CD testing.
 
 print_h2 "REDIRECTION TESTS"
 
+#################################### INFILES
 print_h3 "INFILE"
-exec_test '< hello'
-exec_test 'cat <t'
 exec_test "< $F_TEST cat"
+exec_test "<$F_TEST cat"
 exec_test "cat < $F_TEST"
+exec_test "cat <$F_TEST"
+exec_test '< hello'
+exec_test 'cat <'
+exec_test 'cat < x'
+exec_test 'cat <x'
+exec_test '< x cat'
+exec_test '<x cat'
+exec_test "cat < $F_FORBIDDEN"
+exec_test "cat <$F_FORBIDDEN"
+exec_test "< $F_FORBIDDEN cat"
+exec_test "<$F_FORBIDDEN cat"
 exec_test "< x < $F_TEST cat"
 exec_test "cat < $F_TEST < x"
-test_num=0
+exec_test "cat < $F_TEST < $F_TEST < $F_TEST"
+exec_test "cat < $F_TEST <"
+exec_test "cat < $F_TEST < $F_TEST_2"
+exec_test "<$F_TEST cat < $F_TEST_2"
 
 <<COMMENT1
+#################################### OUTFILES TRUNC
 print_h3 "TRUNC OUTFILE"
 exec_test '> x'
 exec_test 'ls > p | env > q'
@@ -338,8 +399,8 @@ exec_test ''
 exec_test ''
 exec_test ''
 exec_test ''
-test_num=0
 
+#################################### OUTFILES APPEND
 print_h3 "APPEND OUTFILE"
 exec_test ''
 exec_test ''
@@ -361,8 +422,8 @@ exec_test ''
 exec_test ''
 exec_test ''
 exec_test ''
-test_num=0
 
+#################################### FILES
 print_h3 "COMBINE INFILE/OUTFILE"
 exec_test 'echo "File A" > a'
 exec_test 'echo "File B" >> b'
@@ -384,11 +445,11 @@ exec_test ''
 exec_test ''
 exec_test ''
 exec_test ''
-test_num=0
 COMMENT1
 
 print_h2 "PARSING & SYNTAX TESTS"
 
+#################################### QUOTES
 print_h3 "BASIC QUOTE HANDLING"
 exec_test 'ec""ho test'
 exec_test 'ec''ho test'
@@ -418,27 +479,73 @@ exec_test 'ls " "'
 exec_test "ls \" ' \""
 exec_test '"ls"'
 exec_test 'l"s"'
-test_num=0
 
+#################################### SYNTAX ERROR
 print_h3 "SYNTAX ERROR TEST"
 exec_test '|'
-#exec_test '||'
-#exec_test '|||'
+exec_test '||'
+exec_test '|||'
+exec_test '<'
+exec_test '<<'
+exec_test '<<<<<<'
+exec_test '>'
+exec_test '>>'
+exec_test '>>>'
+exec_test '>>>>>>'
 exec_test 'ls |'
+exec_test 'ls ||'
+exec_test 'ls | |'
 exec_test '| ls'
 exec_test '| ls | cat'
 exec_test 'ls | cat |'
-#exec_test 'ls || cat'
+exec_test 'ls || cat'
 exec_test 'ls | | cat'
 exec_test 'fake_cmd |'
 exec_test '| fake_cmd'
-#exec_test 'fake_cmd || ls'
+exec_test 'fake_cmd || ls'
 exec_test 'fake_cmd | | ls'
-#exec_test 'ls || fake_cmd'
+exec_test 'ls || fake_cmd'
 exec_test 'ls | | fake_cmd'
-exec_test 'echo > <'
-exec_test 'echo | |'
-exec_test '<'
+exec_test 'ls >>'
+exec_test 'ls >'
+exec_test 'ls <'
+exec_test 'ls <<'
+exec_test 'ls < |'
+exec_test 'ls << |'
+exec_test 'ls > |'
+exec_test 'ls >> |'
+exec_test 'ls | <'
+exec_test 'ls | <<'
+exec_test 'ls | >'
+exec_test 'ls | >>'
+exec_test 'ls > >'
+exec_test 'ls > >>'
+exec_test 'ls > <'
+exec_test 'ls > <<'
+exec_test 'ls >> >'
+exec_test 'ls >> >>'
+exec_test 'ls >> <'
+exec_test 'ls >> <<'
+exec_test 'ls < >'
+exec_test 'ls < >>'
+exec_test 'ls < <'
+exec_test 'ls < <<'
+exec_test 'ls << >'
+exec_test 'ls << >>'
+exec_test 'ls << <'
+exec_test 'ls << <<'
+exec_test 'ls > >> |'
+exec_test "< < $F_TEST cat"
+exec_test "<< << $F_TEST cat"
+exec_test "<< < $F_TEST cat"
+exec_test "< << $F_TEST cat"
+exec_test '< $FAKE_VAR cat'
+exec_test 'cat < $FAKE_VAR'
+exec_test 'cat < $123456'
+exec_test '< $USER cat'
+exec_test 'echo hello | ;'
+exec_test 'ls > <'
+
 
 << COMMENT0
 exec_test 'ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls'
@@ -517,6 +624,6 @@ exec_test 'echo testing multi ; echo "test 1 ; | and 2" ; cat tests/lorem.txt | 
 COMMENT
 
 print_h2 "RESULTS"
-printf $BOLD$GREEN"\tOK$RED\t\tKO$BOLDPLAIN\t\tTOTAL\n$RESET"
-printf $BOLD$GREEN"\t%d$RED\t\t%d$BOLDPLAIN\t\t%d\n$RESET" $tests_passed $tests_failed $total_tests
+printf $BOLD$GREEN"\tOK$RED\t\tKO$RESET$BOLD\t\tTOTAL\n$RESET"
+printf $BOLD$GREEN"\t%d$RED\t\t%d$RESET$BOLD\t\t%d\n$RESET" $tests_passed $tests_failed $total_tests
 remove_test_files
