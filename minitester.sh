@@ -103,9 +103,9 @@ function output_ok_diff()
 	echo
 	printf "%s Output differs from Bash:$YELLOW OK" "----------"
 	if [[ "$@" == *'||'* ]]; then
-		printf ": minishell does not implement \"||\""
+		printf ": \"||\" implementation not required in minishell mandatory part"
 	elif [[ "$@" == *';'* ]]; then
-		printf ": minishell does not implement \";\""
+		printf ": \";\" implementation not required in minishell"
 	fi
 	printf "$RESET"
 }
@@ -626,4 +626,8 @@ COMMENT
 print_h2 "RESULTS"
 printf $BOLD$GREEN"\tOK$RED\t\tKO$RESET$BOLD\t\tTOTAL\n$RESET"
 printf $BOLD$GREEN"\t%d$RED\t\t%d$RESET$BOLD\t\t%d\n$RESET" $tests_passed $tests_failed $total_tests
+
+print_h2 "NOTICE"
+printf "This tester does not test for memory leaks.\n"
+printf "Some tests still need to be done manually, particularly for:\n\t* 'ctrl-c', 'ctrl-\\' and 'ctrl-D'.\n"
 remove_test_files
