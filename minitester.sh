@@ -43,6 +43,7 @@ F_TEST_OUT_M="outfile_2_minishell"
 F_EXECUTABLE="executable_file"
 F_FORBIDDEN="forbidden"
 D_EXISTS="existing_dir"
+D_FORBIDDEN="forbidden_dir"
 
 #################### TEST COUNT ####################
 declare -i test_num=0
@@ -51,6 +52,8 @@ declare -i tests_passed=0
 declare -i tests_failed=0
 
 ################ TESTING FUNCTIONS #################
+
+###################################### File management
 function create_test_files()
 {
 	printf $CYAN"Creating test files...\n$RESET"
@@ -63,12 +66,14 @@ function create_test_files()
 	chmod 755 "$F_EXECUTABLE"
 	echo "This file is forbidden" > "$F_FORBIDDEN"
 	chmod 000 "$F_FORBIDDEN"
+	mkdir "$D_FORBIDDEN"
+	chmod 000 "$D_FORBIDDEN"
 	printf $GREEN"Test files created.\n$RESET"
 }
 
 function remove_test_files()
 {
-	rm -rf minitests $F_TEST $F_EXISTING $F_EXECUTABLE $F_FORBIDDEN $D_EXISTS
+	rm -rf minitests $F_TEST $F_EXISTING $F_EXECUTABLE $F_FORBIDDEN $D_EXISTS $D_FORBIDDEN
 }
 
 function remove_outfiles()
@@ -88,6 +93,7 @@ function check_outfile()
 	fi
 }
 
+###################################### Output checking
 function output_ok()
 {
 	printf "$BOLD$GREEN%s$RESET" "[OK] "
@@ -160,6 +166,7 @@ function check_output()
 	fi
 }
 
+###################################### Execution tests
 function exec_test()
 {
 	./minishell -c "$@" 1>$M_OUT 2>$M_ERR
@@ -189,6 +196,7 @@ function exec_test_outfile()
 	sleep 0.1
 }
 
+###################################### Display
 function print_h2()
 {
 	printf	"$BOLD$MAGENTA\n"
@@ -225,7 +233,7 @@ printf $GREEN"Minishell ready.\n"$RESET
 create_test_files
 
 print_h2 "BASIC EXECUTION TESTS"
-
+<<TEMP2
 #################################### BASIC EXEC
 print_h3 "BASIC EXECUTION"
 exec_test 'ls'
@@ -291,17 +299,38 @@ exec_test 'PWD'
 exec_test 'pwd hello'
 exec_test 'pwd 123'
 exec_test 'pwd 1 2 x 3 hello'
+TEMP2
 
 #################################### CD
 print_h3 "CD"
-exec_test 'CD ..'
-exec_test 'cd ..'
-exec_test 'pwd'
+exec_test 'CD'
+exec_test 'CD; pwd'
+exec_test 'Cd'
+exec_test 'Cd; pwd'
 exec_test 'cd'
-exec_test 'pwd'
+exec_test 'cd; pwd'
+exec_test 'cd .'
+exec_test 'cd .; pwd'
+exec_test 'cd ..'
+exec_test 'cd ..; pwd'
+exec_test "cd $D_EXISTS"
+exec_test "cd $D_EXISTS; pwd"
+exec_test 'cd /dev'
+exec_test 'cd /dev;pwd'
 exec_test 'cd /Users'
-exec_test 'pwd'
+exec_test 'cd /Users;pwd'
+exec_test 'cd fake_dir'
+exec_test 'cd fake_dir;pwd'
+exec_test "cd $D_FORBIDDEN"
+exec_test "cd $D_FORBIDDEN; pwd"
+exec_test "cd $F_EXISTING"
+exec_test "cd $F_EXISTING; pwd"
+exec_test "cd $F_FORBIDDEN"
+exec_test "cd $F_FORBIDDEN; pwd"
+exec_test 'cd $HOME'
+exec_test 'cd $HOME;pwd'
 
+<<TEMP0
 #################################### ENV
 print_h3 "ENV"
 exec_test 'env | wc -l'
@@ -375,7 +404,7 @@ exec_test "cat < $F_TEST < $F_TEST < $F_TEST"
 exec_test "cat < $F_TEST <"
 exec_test "cat < $F_TEST < $F_TEST_2"
 exec_test "<$F_TEST cat < $F_TEST_2"
-
+TEMP0
 <<COMMENT1
 #################################### OUTFILES TRUNC
 print_h3 "TRUNC OUTFILE"
@@ -446,7 +475,7 @@ exec_test ''
 exec_test ''
 exec_test ''
 COMMENT1
-
+<<TEMP1
 print_h2 "PARSING & SYNTAX TESTS"
 
 #################################### QUOTES
@@ -545,7 +574,7 @@ exec_test 'cat < $123456'
 exec_test '< $USER cat'
 exec_test 'echo hello | ;'
 exec_test 'ls > <'
-
+TEMP1
 
 << COMMENT0
 exec_test 'ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls'
