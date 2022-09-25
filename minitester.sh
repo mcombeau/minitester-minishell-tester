@@ -260,6 +260,107 @@ function test_pipes()
 	exec_test 'ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls'
 }
 
+function test_syntax_quotes()
+{
+	print_h3 "BASIC QUOTE HANDLING"
+	exec_test 'ec""ho test'
+	exec_test 'ec''ho test'
+	exec_test '""echo test'
+	exec_test '''echo test'
+	exec_test 'echo"" test'
+	exec_test 'echo'' test'
+	exec_test 'echo "" test'
+	exec_test 'echo '' test'
+	exec_test 'echo "" "" "" test'
+	exec_test 'echo '' '' '' test'
+	exec_test 'echo """""" test'
+	exec_test 'echo '''''' test'
+	exec_test 'echo $USE""R'
+	exec_test 'echo $USE''R'
+	exec_test 'echo ""$USER'
+	exec_test 'echo ''$USER'
+	exec_test 'echo "$"USER'
+	exec_test 'echo '$'USER'
+	exec_test 'echo $""USER'
+	exec_test 'echo $''USER'
+	exec_test 'echo $USER"" '''
+	exec_test 'ls ""'
+	exec_test "ls '\""
+	exec_test "ls \"\'"
+	exec_test 'ls " "'
+	exec_test "ls \" ' \""
+	exec_test '"ls"'
+	exec_test 'l"s"'
+}
+
+function test_syntax_errors()
+{
+	print_h3 "SYNTAX ERROR TEST"
+	exec_test '|'
+	exec_test '||'
+	exec_test '|||'
+	exec_test '<'
+	exec_test '<<'
+	exec_test '<<<<<<'
+	exec_test '>'
+	exec_test '>>'
+	exec_test '>>>'
+	exec_test '>>>>>>'
+	exec_test 'ls |'
+	exec_test 'ls ||'
+	exec_test 'ls | |'
+	exec_test '| ls'
+	exec_test '| ls | cat'
+	exec_test 'ls | cat |'
+	exec_test 'ls || cat'
+	exec_test 'ls | | cat'
+	exec_test 'fake_cmd |'
+	exec_test '| fake_cmd'
+	exec_test 'fake_cmd || ls'
+	exec_test 'fake_cmd | | ls'
+	exec_test 'ls || fake_cmd'
+	exec_test 'ls | | fake_cmd'
+	exec_test 'ls >>'
+	exec_test 'ls >'
+	exec_test 'ls <'
+	exec_test 'ls <<'
+	exec_test 'ls < |'
+	exec_test 'ls << |'
+	exec_test 'ls > |'
+	exec_test 'ls >> |'
+	exec_test 'ls | <'
+	exec_test 'ls | <<'
+	exec_test 'ls | >'
+	exec_test 'ls | >>'
+	exec_test 'ls > >'
+	exec_test 'ls > >>'
+	exec_test 'ls > <'
+	exec_test 'ls > <<'
+	exec_test 'ls >> >'
+	exec_test 'ls >> >>'
+	exec_test 'ls >> <'
+	exec_test 'ls >> <<'
+	exec_test 'ls < >'
+	exec_test 'ls < >>'
+	exec_test 'ls < <'
+	exec_test 'ls < <<'
+	exec_test 'ls << >'
+	exec_test 'ls << >>'
+	exec_test 'ls << <'
+	exec_test 'ls << <<'
+	exec_test 'ls > >> |'
+	exec_test "< < $F_TEST cat"
+	exec_test "<< << $F_TEST cat"
+	exec_test "<< < $F_TEST cat"
+	exec_test "< << $F_TEST cat"
+	exec_test '< $FAKE_VAR cat'
+	exec_test 'cat < $FAKE_VAR'
+	exec_test 'cat < $123456'
+	exec_test '< $USER cat'
+	exec_test 'echo hello | ;'
+	exec_test 'ls > <'
+}
+
 function test_builtin_echo()
 {
 	print_h3 "ECHO"
@@ -573,107 +674,6 @@ function test_redir_all()
 	exec_test '<a cat <b <c'
 }
 
-function test_syntax_quotes()
-{
-	print_h3 "BASIC QUOTE HANDLING"
-	exec_test 'ec""ho test'
-	exec_test 'ec''ho test'
-	exec_test '""echo test'
-	exec_test '''echo test'
-	exec_test 'echo"" test'
-	exec_test 'echo'' test'
-	exec_test 'echo "" test'
-	exec_test 'echo '' test'
-	exec_test 'echo "" "" "" test'
-	exec_test 'echo '' '' '' test'
-	exec_test 'echo """""" test'
-	exec_test 'echo '''''' test'
-	exec_test 'echo $USE""R'
-	exec_test 'echo $USE''R'
-	exec_test 'echo ""$USER'
-	exec_test 'echo ''$USER'
-	exec_test 'echo "$"USER'
-	exec_test 'echo '$'USER'
-	exec_test 'echo $""USER'
-	exec_test 'echo $''USER'
-	exec_test 'echo $USER"" '''
-	exec_test 'ls ""'
-	exec_test "ls '\""
-	exec_test "ls \"\'"
-	exec_test 'ls " "'
-	exec_test "ls \" ' \""
-	exec_test '"ls"'
-	exec_test 'l"s"'
-}
-
-function test_syntax_errors()
-{
-	print_h3 "SYNTAX ERROR TEST"
-	exec_test '|'
-	exec_test '||'
-	exec_test '|||'
-	exec_test '<'
-	exec_test '<<'
-	exec_test '<<<<<<'
-	exec_test '>'
-	exec_test '>>'
-	exec_test '>>>'
-	exec_test '>>>>>>'
-	exec_test 'ls |'
-	exec_test 'ls ||'
-	exec_test 'ls | |'
-	exec_test '| ls'
-	exec_test '| ls | cat'
-	exec_test 'ls | cat |'
-	exec_test 'ls || cat'
-	exec_test 'ls | | cat'
-	exec_test 'fake_cmd |'
-	exec_test '| fake_cmd'
-	exec_test 'fake_cmd || ls'
-	exec_test 'fake_cmd | | ls'
-	exec_test 'ls || fake_cmd'
-	exec_test 'ls | | fake_cmd'
-	exec_test 'ls >>'
-	exec_test 'ls >'
-	exec_test 'ls <'
-	exec_test 'ls <<'
-	exec_test 'ls < |'
-	exec_test 'ls << |'
-	exec_test 'ls > |'
-	exec_test 'ls >> |'
-	exec_test 'ls | <'
-	exec_test 'ls | <<'
-	exec_test 'ls | >'
-	exec_test 'ls | >>'
-	exec_test 'ls > >'
-	exec_test 'ls > >>'
-	exec_test 'ls > <'
-	exec_test 'ls > <<'
-	exec_test 'ls >> >'
-	exec_test 'ls >> >>'
-	exec_test 'ls >> <'
-	exec_test 'ls >> <<'
-	exec_test 'ls < >'
-	exec_test 'ls < >>'
-	exec_test 'ls < <'
-	exec_test 'ls < <<'
-	exec_test 'ls << >'
-	exec_test 'ls << >>'
-	exec_test 'ls << <'
-	exec_test 'ls << <<'
-	exec_test 'ls > >> |'
-	exec_test "< < $F_TEST cat"
-	exec_test "<< << $F_TEST cat"
-	exec_test "<< < $F_TEST cat"
-	exec_test "< << $F_TEST cat"
-	exec_test '< $FAKE_VAR cat'
-	exec_test 'cat < $FAKE_VAR'
-	exec_test 'cat < $123456'
-	exec_test '< $USER cat'
-	exec_test 'echo hello | ;'
-	exec_test 'ls > <'
-}
-
 #################### BEGIN TESTS ####################
 remove_test_files
 printf "$BOLD$MAGENTA"
@@ -701,6 +701,12 @@ test_exec_basic
 #################################### PIPES
 test_pipes
 
+print_h2 "PARSING & SYNTAX TESTS"
+#################################### QUOTES
+test_syntax_quotes
+#################################### SYNTAX ERRORS
+test_syntax_errors
+
 print_h2 "BUILTIN TESTS"
 
 #################################### ECHO
@@ -727,12 +733,6 @@ test_builtin_exit
 #test_redir_outfile_append
 #################################### FILES
 #test_redir_all
-
-print_h2 "PARSING & SYNTAX TESTS"
-#################################### QUOTES
-test_syntax_quotes
-#################################### SYNTAX ERRORS
-test_syntax_errors
 
 <<COMMENT
 exec_test 'ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls'
