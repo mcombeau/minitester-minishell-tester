@@ -34,6 +34,7 @@ B_ERR_CMP="./minitests/bash_err_cmp"
 B_EXT="./minitests/bash_exit"
 
 F_EXISTING="existing_file"
+F_DOES_NOT_EXIST="file_does_not_exist"
 F_TEST="test_file.txt"
 F_TEST_2="test_file_2.txt"
 F_TEST_OUT="outfile"
@@ -73,7 +74,7 @@ function create_test_files()
 
 function remove_test_files()
 {
-	rm -rf minitests $F_TEST $F_EXISTING $F_EXECUTABLE $F_FORBIDDEN $D_EXISTS $D_FORBIDDEN
+	rm -rf minitests $F_TEST $F_TEST_2 $F_EXISTING $F_EXECUTABLE $F_FORBIDDEN $D_EXISTS $D_FORBIDDEN
 }
 
 function remove_outfiles()
@@ -107,9 +108,11 @@ function output_ok_diff()
 	printf "$CYAN [$@] $RESET"
 	tests_passed+=1
 	echo
-	printf "%s Output differs from Bash:$YELLOW OK" "----------"
+	printf "%s Output differs from Bash:$YELLOW\nOK" "----------"
 	if [[ "$@" == *'||'* ]]; then
 		printf ": \"||\" implementation not required in minishell mandatory part"
+	elif [[ "$@" == *'unset'* ]]; then
+		printf ": minishell shows 'not a valid identifier' error whereas Bash no longer does on some systems"
 	elif [[ "$@" == *';'* ]]; then
 		printf ": \";\" implementation not required in minishell"
 	fi
@@ -159,6 +162,8 @@ function check_output()
 		output_ok "$@"
 	elif [[ "$@" == *'||'* ]] && grep -q "syntax error" "$M_ERR" && grep -q "2" "$M_EXT"; then
 		output_ok_diff "$@"
+	elif [[ "$@" == *'unset'* ]] && grep -q "not a valid identifier" "$M_ERR"; then
+		output_ok_diff "$@"
 	elif [[ "$@" == *';'* ]] && grep -q "command not found" "$M_ERR" && grep -q "127" "$M_EXT"; then
 		output_ok_diff "$@"
 	else
@@ -174,7 +179,7 @@ function exec_test()
 	bash -c "$@" 1>$B_OUT 2>$B_ERR
 	echo "$?">$B_EXT
 
-	check_output "$@"	
+	check_output "$@"
 	test_num+=1
 	total_tests+=1
 	echo
@@ -211,6 +216,464 @@ function print_h3()
 	printf	"$BOLD$YELLOW-----------%s$RESET\n" "$@"
 }
 
+################### TEST FUNCTIONS ##################
+
+function test_exec_basic()
+{
+	print_h3 "BASIC EXECUTION"
+	exec_test 'ls'
+	exec_test 'ls -la'
+	exec_test '/usr/bin/ls'
+	exec_test 'usr/bin/ls'
+	exec_test './ls'
+	exec_test 'hello'
+	exec_test '/usr/bin/hello'
+	exec_test './hello'
+	exec_test '""'
+	exec_test '..'
+	exec_test '$'
+	exec_test './'
+	exec_test '../'
+	exec_test "./$D_EXISTS"
+	exec_test '../fake_dir/'
+	exec_test "./$F_EXISTING"
+	exec_test './nonexistant_file'
+	exec_test "./$F_EXECUTABLE"
+	exec_test ".$F_EXECUTABLE"
+	exec_test "$F_EXECUTABLE"
+}
+
+function test_pipes()
+{
+	print_h3 "PIPE TESTS"
+	exec_test 'ls -l | wc -l'
+	exec_test "cat $F_TEST | grep dream"
+	exec_test "cat $F_TEST | grep dream | cat -e"
+	exec_test "cat $F_TEST | grep dream | wc -l"
+	exec_test "cat $F_TEST | grep dream | wc -l | cd x"
+	exec_test "cat $F_TEST | grep dream | wc -l | x"
+	exec_test "x | cat $F_TEST | grep dream | wc -l"
+	exec_test "cat $F_TEST | x | grep dream | wc -l"
+	exec_test "cat $F_TEST | grep dream | x | wc -l"
+	exec_test 'cat /dev/random | head -c 100 | wc -c'
+	exec_test 'ls | ls | ls'
+	exec_test 'ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls'
+}
+
+function test_builtin_echo()
+{
+	print_h3 "ECHO"
+	exec_test 'ECHO'
+	exec_test 'Echo'
+	exec_test 'echo'
+	exec_test 'echo hello'
+	exec_test 'echo hello'
+	exec_test 'echo hello world'
+	exec_test 'echo hello      world'
+	exec_test 'echo                      hello world'
+	exec_test 'echo hello world                '
+	exec_test 'echo helololollllolllolol loollolllololllol lllol  looololololollllloooolll'
+	exec_test 'echo helololollllolllolol                                 loollolllololllol                   lllol                looololololollllloooolll'
+	exec_test 'echo -n'
+	exec_test 'echo -n hello world'
+	exec_test 'echo hello      world'
+	exec_test 'echo                      hello world'
+	exec_test 'echo -n hello world                '
+	exec_test 'echo -n helololollllolllolol loollolllololllol lllol  looololololollllloooolll'
+	exec_test 'echo -n helololollllolllolol                                 loollolllololllol                   lllol                looololololollllloooolll'
+	exec_test 'echo hello -n'
+	exec_test '             echo                 hello                world'
+	exec_test '             echo             -n                  hello               world                       '
+	exec_test "echo a '' b '' c '' d"
+	exec_test 'echo a "" b "" c "" d'
+	exec_test "echo -n a '' b '' c '' d"
+	exec_test 'echo -n a "" b "" c "" d'
+	exec_test 'echo -nhello world'
+	exec_test 'echo -n -n -n hello world'
+	exec_test 'echo -n -n -nnnn -nnnnm'
+	exec_test 'echo a	-nnnnhello'
+	exec_test 'echo -n -nnn hello -n'
+	exec_test 'echo a	hello -nhello'
+}
+
+function test_builtin_env()
+{
+	print_h3 "ENV"
+	exec_test 'ENV | wc -l'
+	exec_test 'Env | wc -l'
+	exec_test 'env | wc -l'
+	exec_test 'env | grep PATH'
+}
+
+function test_builtin_export()
+{
+	print_h3 "EXPORT"
+	exec_test 'EXPORT'
+	exec_test 'Export'
+	exec_test 'export | wc -l'
+	exec_test 'export ""'
+	exec_test 'export 42'
+	exec_test 'export 42; env | grep 42'
+	exec_test 'export ='
+	exec_test 'export =; env | grep = | wc -l'
+	exec_test 'export A'
+	exec_test 'export A=; echo $A'
+	exec_test 'export A=a; echo $A'
+	exec_test 'export A=a B=b C=c; echo $A$B$C'
+	exec_test 'export A=a B=b C=c; export A=c B=a C=b; echo $A$B$C'
+	exec_test 'export A=a B=b C=c D=d E=e F=f G=g H=h I=i J=j K=k L=l M=m N=n O=o P=p Q=q R=r S=s T=t U=u V=v W=w X=x Y=y Z=z; echo $A$B$C$D$E$F$G$H$I$J$K$L$M$N$O$P$Q$R$S$T$U$V$W$X$Y$Z'
+	exec_test 'export A==a; echo $A'
+	exec_test 'export A===a; echo $A'
+	exec_test 'export A====a; echo $A'
+	exec_test 'export A=====a; echo $A'
+	exec_test 'export A======a; echo $A'
+	exec_test 'export A=a=a=a=a=a; echo $A'
+	exec_test 'export HELLOWORLD=a; echo $HELLOWORLD'
+	exec_test 'export helloworld=a; echo $helloworld'
+	exec_test 'export hello_world=a; echo $hello_world'
+	exec_test 'export HELLOWORLD1=a; echo $HELLOWORLD1'
+	exec_test 'export H1ELL_0_W123Orld_a=a; echo $H1ELL_0_W123Orld_a'
+	exec_test 'export a0123456789=a; echo $a0123456789'
+	exec_test 'export abcdefghijklmnopqrstuvwxyz=a; echo $abcdefghijklmnopqrstuvwxyz'
+	exec_test 'export __________________________=a; echo $__________________________'
+	exec_test 'export _hello_=a; echo $_hello_'
+	exec_test 'export 1'
+	exec_test 'export 1='
+	exec_test 'export 1=a'
+	exec_test 'export HELLOWORLD =a'
+	exec_test 'export HELLOWORLD= a'
+	exec_test "export HELLO\'WORLD=a"
+	exec_test "export HELLO\'WORLD\'=a"
+	exec_test "export HELLO\"WORLD=a"
+	exec_test "export HELLO\"WORLD\"=a"
+	exec_test "export HELLO\$WORLD=a"
+	exec_test "export HELLO|WORLD=a"
+	exec_test "export HELLO_WORLD=a"
+	exec_test "export A='hello this world is wonderful'; echo \$A"
+	exec_test "export A=\"hello this world is wonderful\"; echo \$A"
+	exec_test "export A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo \$A\$B\$C"
+	exec_test "export 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo \$A\$B\$C"
+	exec_test "export A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf '; echo \$A\$B\$C"
+	exec_test "export A B C; echo \$A\$B\$C"
+	exec_test "export 'HELLO@'=hello"
+	exec_test "export \"HELLO'\"=hello"
+	exec_test "export 'HELLO\"'=hello"
+	exec_test "export 'HELLO$'=hello"
+	exec_test "export 'HELLO!'=hello"
+	exec_test "export 'HELLO|'=hello"
+	exec_test "export 'HELLO&'=hello"
+	exec_test "export 'HELLO\\'=hello"
+	exec_test 'export ALPHA="abc def ghi"; echo $ALPHA'
+	exec_test "export ALPHA='abc def ghi'; echo \$ALPHA"
+	exec_test 'export DIGITS="0 1 2 3 4 5 6 7 8 9"; echo $DIGITS'
+	exec_test "export DIGITS='0 1 2 3 4 5 6 7 8 9'; echo \$DIGITS"
+	exec_test 'export DIGITS=0 1 2 3 4 5 6 7 8 9; echo $DIGITS'
+}
+
+function test_builtin_unset()
+{
+	print_h3 "UNSET"
+	exec_test 'UNSET'
+	exec_test 'Unset'
+	exec_test 'unset'
+	exec_test 'unset PATH'
+	exec_test 'unset PATH; echo $PATH'
+	exec_test 'unset PATH; ls'
+	exec_test 'unset NOT_A_VAR'
+	exec_test 'unset ""'
+	exec_test "unset ''"
+	exec_test 'export A=a; unset A; echo $A'
+	exec_test 'export A=a A2=a; unset A; echo $A $A2'
+	exec_test "export A=a; unset 'A '; echo \$A"
+	exec_test "export A=a; unset A=; echo \$A"
+	exec_test "export A=a; unset 'A='; echo \$A"
+	exec_test 'export A=a B=b C=c; unset A B C; echo $A$B$C'
+	exec_test "export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C"
+	exec_test "export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo \$A\$B\$C"
+	exec_test "export A=a B=b C=c; unset 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C"
+	exec_test "export A=a B=b C=c; unset 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo \$A\$B\$C"
+	exec_test "export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf '"
+	exec_test "export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf '; echo \$A\$B\$C"
+	exec_test 'export A=a B=b C=c; unset A'
+	exec_test 'export A=a B=b C=c; unset A; echo $A$B$C'
+	exec_test 'export A=a B=b C=c; unset B'
+	exec_test 'export A=a B=b C=c; unset B; echo $A$B$C'
+	exec_test 'export A=a B=b C=c; unset C'
+	exec_test 'export A=a B=b C=c; unset C; echo $A$B$C'
+	exec_test "unset 'HELLO@'"
+	exec_test "unset \"HELLO'\""
+	exec_test "unset 'HELLO\"'"
+	exec_test "unset 'HELLO$'"
+	exec_test "unset 'HELLO!'"
+	exec_test "unset 'HELLO|'"
+	exec_test "unset 'HELLO&'"
+	exec_test "unset 'HELLO\\'"
+}
+
+function test_builtin_pwd()
+{
+	print_h3 "PWD"
+	exec_test 'PWD'
+	exec_test 'Pwd'
+	exec_test 'pwd'
+	exec_test 'pwd | cat -e'	
+	exec_test 'pwd hello'
+	exec_test 'pwd 123'
+	exec_test 'pwd 1 2 x 3 hello'
+	exec_test 'unset PWD; pwd | cat -e'
+	exec_test 'unset OLDPWD; pwd | cat -e'
+	exec_test 'unset PWD OLDPWD; pwd | cat -e'
+}
+
+function test_builtin_cd()
+{
+	print_h3 "CD"
+	exec_test 'CD'
+	exec_test 'CD; pwd'
+	exec_test 'Cd'
+	exec_test 'Cd; pwd'
+	exec_test 'cd'
+	exec_test 'cd; pwd'
+	exec_test 'cd .'
+	exec_test 'cd .; pwd'
+	exec_test 'cd ..'
+	exec_test 'cd ..; pwd'
+	exec_test "cd $D_EXISTS"
+	exec_test "cd $D_EXISTS; pwd"
+	exec_test 'cd /dev'
+	exec_test 'cd /dev;pwd'
+	exec_test 'cd /Users'
+	exec_test 'cd /Users;pwd'
+	exec_test 'cd fake_dir'
+	exec_test 'cd fake_dir;pwd'
+	exec_test "cd $D_FORBIDDEN"
+	exec_test "cd $D_FORBIDDEN; pwd"
+	exec_test "cd $F_EXISTING"
+	exec_test "cd $F_EXISTING; pwd"
+	exec_test "cd $F_FORBIDDEN"
+	exec_test "cd $F_FORBIDDEN; pwd"
+	exec_test 'cd $HOME'
+	exec_test 'cd $HOME;pwd'
+}
+
+function test_builtin_exit()
+{
+	print_h3 "EXIT"
+	exec_test 'exit'
+	exec_test 'Exit'
+	exec_test 'EXIT'
+	exec_test 'exit 42'
+	exec_test 'exit 42; echo "Should have exited."'
+	exec_test 'exit 240'
+	exec_test 'exit +42'
+	exec_test 'exit -42'
+	exec_test 'exit 00000000000000000000000000000000000000000000001'
+	exec_test 'exit 00000000000000000000000000000000000000000000000'
+	exec_test 'exit -00000000000000000000000000000000000000000000001'
+	exec_test 'exit -00000000000000000000000000000000000000000000000'
+	exec_test 'exit abc'
+	exec_test 'exit abc; echo "Should have exited."'
+	exec_test 'exit --42'
+	exec_test 'exit ++42'
+	exec_test 'exit - 42'
+	exec_test 'exit + 42'
+	exec_test 'exit "0"'
+	exec_test "exit '0'"
+	exec_test 'exit ""'
+	exec_test "exit ''"
+	exec_test 'exit " "'
+	exec_test "exit ' '"
+	exec_test "exit ' 5'"
+	exec_test "exit '\t5'"
+	exec_test "exit '\t\f\r5'"
+	exec_test "exit '5 '"
+	exec_test "exit '5\t'"
+	exec_test "exit '5\t\f\r'"
+	exec_test "exit '5     x'"
+	exec_test "exit '5\t\t\tx'"
+	exec_test 'exit 42 41'
+	exec_test 'exit 42 abc'
+	exec_test 'exit abc 42'
+	exec_test 'exit 2147483647'
+	exec_test 'exit 2147483648'
+	exec_test 'exit -2147483648'
+	exec_test 'exit -2147483649'
+	exec_test 'exit 9223372036854775807'
+	exec_test 'exit -9223372036854775808'
+	exec_test 'exit 9223372036854775808'
+	exec_test 'exit -9223372036854775810'
+	exec_test 'exit 9999999999999999999999999999999999999999999999'
+	exec_test 'exit -9999999999999999999999999999999999999999999999'
+	exec_test 'exit _0'
+	exec_test 'exit 0_'
+	exec_test "exit 5 < $F_TEST"
+	exec_test 'exit 1 | exit 0'
+	exec_test 'exit 0 | exit 1'
+	exec_test 'ls | exit'
+	exec_test 'ls | exit 42'
+	exec_test 'ls | exit 12 abc'
+	exec_test 'ls | exit abc 12'
+	exec_test 'exit | ls'
+	exec_test 'exit 42 | ls'
+	exec_test 'exit 12 abc | ls'
+	exec_test 'exit abc 12 | ls'
+	#exec_test "ls > file | exit"
+	#exec_test "ls -l > x | exit | wc -l"
+}
+
+function test_redir_infile()
+{
+	print_h3 "INFILE"
+	exec_test "< $F_TEST cat"
+	exec_test "<$F_TEST cat"
+	exec_test "cat < $F_TEST"
+	exec_test "cat <$F_TEST"
+	exec_test "< $F_TEST"
+	exec_test "< $F_DOES_NOT_EXIST"
+	exec_test "< $F_FORBIDDEN"
+	exec_test 'cat <'
+	exec_test "cat < $F_DOES_NOT_EXIST"
+	exec_test "cat < $F_DOES_NOT_EXIST"
+	exec_test "< $F_DOES_NOT_EXIST cat"
+	exec_test "<$F_DOES_NOT_EXIST cat"
+	exec_test "cat < $F_FORBIDDEN"
+	exec_test "cat <$F_FORBIDDEN"
+	exec_test "< $F_FORBIDDEN cat"
+	exec_test "<$F_FORBIDDEN cat"
+	exec_test "< $F_DOES_NOT_EXIST < $F_TEST cat"
+	exec_test "cat < $F_TEST < $F_DOES_NOT_EXIST"
+	exec_test "cat < $F_TEST < $F_TEST < $F_TEST"
+	exec_test "cat < $F_TEST <"
+	exec_test "cat < $F_TEST < $F_TEST_2"
+	exec_test "<$F_TEST cat < $F_TEST_2"
+}
+
+function test_redir_outfile_trunc()
+{
+	print_h3 "TRUNC OUTFILE"
+	exec_test '> x'
+	exec_test 'ls > p | env > q'
+	exec_test ''
+}
+
+function test_redir_outfile_append()
+{
+	print_h3 "APPEND OUTFILE"
+	exec_test ''
+}
+
+function test_redir_all()
+{
+	print_h3 "COMBINE INFILE/OUTFILE"
+	exec_test 'echo "File A" > a'
+	exec_test 'echo "File B" >> b'
+	exec_test 'echo File C >c'
+	exec_test '<a cat <b <c'
+	exec_test 'chmod 000 b'
+	exec_test '<a cat <b <c'
+}
+
+function test_syntax_quotes()
+{
+	print_h3 "BASIC QUOTE HANDLING"
+	exec_test 'ec""ho test'
+	exec_test 'ec''ho test'
+	exec_test '""echo test'
+	exec_test '''echo test'
+	exec_test 'echo"" test'
+	exec_test 'echo'' test'
+	exec_test 'echo "" test'
+	exec_test 'echo '' test'
+	exec_test 'echo "" "" "" test'
+	exec_test 'echo '' '' '' test'
+	exec_test 'echo """""" test'
+	exec_test 'echo '''''' test'
+	exec_test 'echo $USE""R'
+	exec_test 'echo $USE''R'
+	exec_test 'echo ""$USER'
+	exec_test 'echo ''$USER'
+	exec_test 'echo "$"USER'
+	exec_test 'echo '$'USER'
+	exec_test 'echo $""USER'
+	exec_test 'echo $''USER'
+	exec_test 'echo $USER"" '''
+	exec_test 'ls ""'
+	exec_test "ls '\""
+	exec_test "ls \"\'"
+	exec_test 'ls " "'
+	exec_test "ls \" ' \""
+	exec_test '"ls"'
+	exec_test 'l"s"'
+}
+
+function test_syntax_errors()
+{
+	print_h3 "SYNTAX ERROR TEST"
+	exec_test '|'
+	exec_test '||'
+	exec_test '|||'
+	exec_test '<'
+	exec_test '<<'
+	exec_test '<<<<<<'
+	exec_test '>'
+	exec_test '>>'
+	exec_test '>>>'
+	exec_test '>>>>>>'
+	exec_test 'ls |'
+	exec_test 'ls ||'
+	exec_test 'ls | |'
+	exec_test '| ls'
+	exec_test '| ls | cat'
+	exec_test 'ls | cat |'
+	exec_test 'ls || cat'
+	exec_test 'ls | | cat'
+	exec_test 'fake_cmd |'
+	exec_test '| fake_cmd'
+	exec_test 'fake_cmd || ls'
+	exec_test 'fake_cmd | | ls'
+	exec_test 'ls || fake_cmd'
+	exec_test 'ls | | fake_cmd'
+	exec_test 'ls >>'
+	exec_test 'ls >'
+	exec_test 'ls <'
+	exec_test 'ls <<'
+	exec_test 'ls < |'
+	exec_test 'ls << |'
+	exec_test 'ls > |'
+	exec_test 'ls >> |'
+	exec_test 'ls | <'
+	exec_test 'ls | <<'
+	exec_test 'ls | >'
+	exec_test 'ls | >>'
+	exec_test 'ls > >'
+	exec_test 'ls > >>'
+	exec_test 'ls > <'
+	exec_test 'ls > <<'
+	exec_test 'ls >> >'
+	exec_test 'ls >> >>'
+	exec_test 'ls >> <'
+	exec_test 'ls >> <<'
+	exec_test 'ls < >'
+	exec_test 'ls < >>'
+	exec_test 'ls < <'
+	exec_test 'ls < <<'
+	exec_test 'ls << >'
+	exec_test 'ls << >>'
+	exec_test 'ls << <'
+	exec_test 'ls << <<'
+	exec_test 'ls > >> |'
+	exec_test "< < $F_TEST cat"
+	exec_test "<< << $F_TEST cat"
+	exec_test "<< < $F_TEST cat"
+	exec_test "< << $F_TEST cat"
+	exec_test '< $FAKE_VAR cat'
+	exec_test 'cat < $FAKE_VAR'
+	exec_test 'cat < $123456'
+	exec_test '< $USER cat'
+	exec_test 'echo hello | ;'
+	exec_test 'ls > <'
+}
+
 #################### BEGIN TESTS ####################
 remove_test_files
 printf "$BOLD$MAGENTA"
@@ -233,350 +696,45 @@ printf $GREEN"Minishell ready.\n"$RESET
 create_test_files
 
 print_h2 "BASIC EXECUTION TESTS"
-<<TEMP2
 #################################### BASIC EXEC
-print_h3 "BASIC EXECUTION"
-exec_test 'ls'
-exec_test 'ls -la'
-exec_test '/usr/bin/ls'
-exec_test 'usr/bin/ls'
-exec_test './ls'
-exec_test 'hello'
-exec_test '/usr/bin/hello'
-exec_test './hello'
-exec_test '""'
-exec_test '..'
-exec_test '$'
-exec_test './'
-exec_test '../'
-exec_test "./$D_EXISTS"
-exec_test '../fake_dir/'
-exec_test "./$F_EXISTING"
-exec_test './nonexistant_file'
-exec_test "./$F_EXECUTABLE"
-exec_test ".$F_EXECUTABLE"
-exec_test "$F_EXECUTABLE"
-
+test_exec_basic
 #################################### PIPES
-print_h3 "PIPE TESTS"
-exec_test 'ls -l | wc -l'
-exec_test "cat $F_TEST | grep dream"
-exec_test "cat $F_TEST | grep dream | cat -e"
-exec_test "cat $F_TEST | grep dream | wc -l"
-exec_test "cat $F_TEST | grep dream | wc -l | cd x"
-exec_test "cat $F_TEST | grep dream | wc -l | x"
-exec_test "x | cat $F_TEST | grep dream | wc -l"
-exec_test "cat $F_TEST | x | grep dream | wc -l"
-exec_test "cat $F_TEST | grep dream | x | wc -l"
-exec_test 'cat /dev/random | head -c 100 | wc -c'
-exec_test 'ls | ls | ls'
-exec_test 'ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls'
+test_pipes
 
 print_h2 "BUILTIN TESTS"
 
 #################################### ECHO
-print_h3 "ECHO"
-exec_test 'echo'
-exec_test 'Echo'
-exec_test 'ECHO'
-exec_test 'echo hello'
-exec_test 'echo hello world'
-exec_test 'echo hello      world'
-exec_test 'echo                      hello world'
-exec_test 'echo hello world                '
-exec_test 'echo -n hello world'
-exec_test 'echo -n -n -n hello world'
-exec_test 'echo -n -n -nnnn -nnnnm'
-exec_test 'echo a	-nnnnma'
-exec_test 'echo -n -nnn hello -n'
-exec_test 'echo a	hello -na'
-
-#################################### PWD
-print_h3 "PWD"
-exec_test 'pwd'
-exec_test 'Pwd'
-exec_test 'PWD'
-exec_test 'pwd hello'
-exec_test 'pwd 123'
-exec_test 'pwd 1 2 x 3 hello'
-TEMP2
-
-#################################### CD
-print_h3 "CD"
-exec_test 'CD'
-exec_test 'CD; pwd'
-exec_test 'Cd'
-exec_test 'Cd; pwd'
-exec_test 'cd'
-exec_test 'cd; pwd'
-exec_test 'cd .'
-exec_test 'cd .; pwd'
-exec_test 'cd ..'
-exec_test 'cd ..; pwd'
-exec_test "cd $D_EXISTS"
-exec_test "cd $D_EXISTS; pwd"
-exec_test 'cd /dev'
-exec_test 'cd /dev;pwd'
-exec_test 'cd /Users'
-exec_test 'cd /Users;pwd'
-exec_test 'cd fake_dir'
-exec_test 'cd fake_dir;pwd'
-exec_test "cd $D_FORBIDDEN"
-exec_test "cd $D_FORBIDDEN; pwd"
-exec_test "cd $F_EXISTING"
-exec_test "cd $F_EXISTING; pwd"
-exec_test "cd $F_FORBIDDEN"
-exec_test "cd $F_FORBIDDEN; pwd"
-exec_test 'cd $HOME'
-exec_test 'cd $HOME;pwd'
-
-<<TEMP0
+test_builtin_echo
 #################################### ENV
-print_h3 "ENV"
-exec_test 'env | wc -l'
-exec_test 'Env | wc -l'
-exec_test 'ENV | wc -l'
-exec_test 'env | grep PATH'
-
-
+test_builtin_env
+#################################### EXPORT
+test_builtin_export
+#################################### UNSET
+test_builtin_unset
+#################################### PWD
+test_builtin_pwd
+#################################### CD
+test_builtin_cd
 #################################### EXIT
-print_h3 "EXIT"
-exec_test "exit"
-exec_test "Exit"
-exec_test "EXIT"
-exec_test "exit 42"
-exec_test "exit 240"
-exec_test "exit +42"
-exec_test "exit -42"
-exec_test "exit abc"
-exec_test "exit --42"
-exec_test "exit ++42"
-exec_test "exit 42 41"
-exec_test "exit 42 abc"
-exec_test "exit abc 42"
-exec_test "exit 2147483647"
-exec_test "exit 2147483648"
-exec_test "exit -2147483648"
-exec_test "exit -2147483649"
-exec_test "exit 9223372036854775807"
-exec_test "exit -9223372036854775808"
-exec_test "exit 9223372036854775808"
-exec_test "exit -9223372036854775810"
-exec_test "exit 5 < $F_TEST"
-#exec_test "exit 5 < $F_TEST"
-exec_test "exit 1 | exit 0"
-exec_test "exit 0 | exit 1"
-exec_test "ls | exit"
-exec_test "ls | exit 42"
-exec_test "ls | exit 12 abc"
-exec_test "ls | exit abc 12"
-exec_test "exit | ls"
-exec_test "exit 42 | ls"
-exec_test "exit 12 abc | ls"
-exec_test "exit abc 12 | ls"
-#exec_test "ls > file | exit"
-#exec_test "sleep 2 | exit"
-#exec_test "ls -l > x | exit | wc -l"
+test_builtin_exit
 
-# TODO: Find a way to test EXPORT and UNSET, as well as better CD testing.
-
-print_h2 "REDIRECTION TESTS"
-
+#print_h2 "REDIRECTION TESTS"
 #################################### INFILES
-print_h3 "INFILE"
-exec_test "< $F_TEST cat"
-exec_test "<$F_TEST cat"
-exec_test "cat < $F_TEST"
-exec_test "cat <$F_TEST"
-exec_test '< hello'
-exec_test 'cat <'
-exec_test 'cat < x'
-exec_test 'cat <x'
-exec_test '< x cat'
-exec_test '<x cat'
-exec_test "cat < $F_FORBIDDEN"
-exec_test "cat <$F_FORBIDDEN"
-exec_test "< $F_FORBIDDEN cat"
-exec_test "<$F_FORBIDDEN cat"
-exec_test "< x < $F_TEST cat"
-exec_test "cat < $F_TEST < x"
-exec_test "cat < $F_TEST < $F_TEST < $F_TEST"
-exec_test "cat < $F_TEST <"
-exec_test "cat < $F_TEST < $F_TEST_2"
-exec_test "<$F_TEST cat < $F_TEST_2"
-TEMP0
-<<COMMENT1
+#test_redir_infile
 #################################### OUTFILES TRUNC
-print_h3 "TRUNC OUTFILE"
-exec_test '> x'
-exec_test 'ls > p | env > q'
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-
+#test_redir_outfile_trunc
 #################################### OUTFILES APPEND
-print_h3 "APPEND OUTFILE"
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-
+#test_redir_outfile_append
 #################################### FILES
-print_h3 "COMBINE INFILE/OUTFILE"
-exec_test 'echo "File A" > a'
-exec_test 'echo "File B" >> b'
-exec_test 'echo File C >c'
-exec_test '<a cat <b <c'
-exec_test 'chmod 000 b'
-exec_test '<a cat <b <c'
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-exec_test ''
-COMMENT1
-<<TEMP1
+#test_redir_all
+
 print_h2 "PARSING & SYNTAX TESTS"
-
 #################################### QUOTES
-print_h3 "BASIC QUOTE HANDLING"
-exec_test 'ec""ho test'
-exec_test 'ec''ho test'
-exec_test '""echo test'
-exec_test '''echo test'
-exec_test 'echo"" test'
-exec_test 'echo'' test'
-exec_test 'echo "" test'
-exec_test 'echo '' test'
-exec_test 'echo "" "" "" test'
-exec_test 'echo '' '' '' test'
-exec_test 'echo """""" test'
-exec_test 'echo '''''' test'
-exec_test 'echo $USE""R'
-exec_test 'echo $USE''R'
-exec_test 'echo ""$USER'
-exec_test 'echo ''$USER'
-exec_test 'echo "$"USER'
-exec_test 'echo '$'USER'
-exec_test 'echo $""USER'
-exec_test 'echo $''USER'
-exec_test 'echo $USER"" '''
-exec_test 'ls ""'
-exec_test "ls '\""
-exec_test "ls \"\'"
-exec_test 'ls " "'
-exec_test "ls \" ' \""
-exec_test '"ls"'
-exec_test 'l"s"'
+test_syntax_quotes
+#################################### SYNTAX ERRORS
+test_syntax_errors
 
-#################################### SYNTAX ERROR
-print_h3 "SYNTAX ERROR TEST"
-exec_test '|'
-exec_test '||'
-exec_test '|||'
-exec_test '<'
-exec_test '<<'
-exec_test '<<<<<<'
-exec_test '>'
-exec_test '>>'
-exec_test '>>>'
-exec_test '>>>>>>'
-exec_test 'ls |'
-exec_test 'ls ||'
-exec_test 'ls | |'
-exec_test '| ls'
-exec_test '| ls | cat'
-exec_test 'ls | cat |'
-exec_test 'ls || cat'
-exec_test 'ls | | cat'
-exec_test 'fake_cmd |'
-exec_test '| fake_cmd'
-exec_test 'fake_cmd || ls'
-exec_test 'fake_cmd | | ls'
-exec_test 'ls || fake_cmd'
-exec_test 'ls | | fake_cmd'
-exec_test 'ls >>'
-exec_test 'ls >'
-exec_test 'ls <'
-exec_test 'ls <<'
-exec_test 'ls < |'
-exec_test 'ls << |'
-exec_test 'ls > |'
-exec_test 'ls >> |'
-exec_test 'ls | <'
-exec_test 'ls | <<'
-exec_test 'ls | >'
-exec_test 'ls | >>'
-exec_test 'ls > >'
-exec_test 'ls > >>'
-exec_test 'ls > <'
-exec_test 'ls > <<'
-exec_test 'ls >> >'
-exec_test 'ls >> >>'
-exec_test 'ls >> <'
-exec_test 'ls >> <<'
-exec_test 'ls < >'
-exec_test 'ls < >>'
-exec_test 'ls < <'
-exec_test 'ls < <<'
-exec_test 'ls << >'
-exec_test 'ls << >>'
-exec_test 'ls << <'
-exec_test 'ls << <<'
-exec_test 'ls > >> |'
-exec_test "< < $F_TEST cat"
-exec_test "<< << $F_TEST cat"
-exec_test "<< < $F_TEST cat"
-exec_test "< << $F_TEST cat"
-exec_test '< $FAKE_VAR cat'
-exec_test 'cat < $FAKE_VAR'
-exec_test 'cat < $123456'
-exec_test '< $USER cat'
-exec_test 'echo hello | ;'
-exec_test 'ls > <'
-TEMP1
-
-<< COMMENT0
+<<COMMENT
 exec_test 'ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls'
 
 print_h3 "PARSING SYNTAX TESTS"
@@ -584,11 +742,7 @@ exec_test "cat $F_TEST | grep dream | x | wc -l |"
 exec_test "cat $F_TEST || grep dream | x | wc -l"
 exec_test "| cat $F_TEST | grep dream | x | wc -l"
 exec_test "| cat $F_TEST | grep dream | x | wc -l |"
-COMMENT0
 
-
-
-<<COMMENT
 exec_test 'mkdir test_dir ; cd test_dir ; rm -rf ../test_dir ; cd . ; pwd ; cd . ; pwd ; cd .. ; pwd'
 # PIPE TESTS
 exec_test 'echo test | cat -e | cat -e | cat -e | cat -e | cat -e | cat -e | cat -e | cat -e | cat -e | cat -e| cat -e| cat -e| cat -e| cat -e| cat -e| cat -e| cat -e| cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e|cat -e'
