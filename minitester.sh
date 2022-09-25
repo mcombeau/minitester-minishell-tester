@@ -111,6 +111,8 @@ function output_ok_diff()
 	printf "%s Output differs from Bash:$YELLOW\nOK" "----------"
 	if [[ "$@" == *'||'* ]]; then
 		printf ": \"||\" implementation not required in minishell mandatory part"
+	elif [[ "$@" == '.' ]]; then
+		printf ": \".\" implementation not required in minishell mandatory part"
 	elif [[ "$@" == *'unset'* ]]; then
 		printf ": minishell shows 'not a valid identifier' error whereas Bash no longer does on some systems"
 	elif [[ "$@" == *';'* ]]; then
@@ -160,6 +162,8 @@ function check_output()
 		output_ok "$@"
 	elif cmp -s "$M_OUT" "$B_OUT" && cmp -s "$M_EXT" "$B_EXT" && grep -q "syntax error" "$M_ERR" && grep -q "syntax error" "$B_ERR"; then
 		output_ok "$@"
+	elif [[ "$@" == '.' ]] && grep -q "command not found" "$M_ERR" && grep -q "127" "$M_EXT"; then
+		output_ok_diff "$@"
 	elif [[ "$@" == *'||'* ]] && grep -q "syntax error" "$M_ERR" && grep -q "2" "$M_EXT"; then
 		output_ok_diff "$@"
 	elif [[ "$@" == *'unset'* ]] && grep -q "not a valid identifier" "$M_ERR"; then
@@ -230,6 +234,7 @@ function test_exec_basic()
 	exec_test '/usr/bin/hello'
 	exec_test './hello'
 	exec_test '""'
+	exec_test '.'
 	exec_test '..'
 	exec_test '$'
 	exec_test './'
@@ -256,6 +261,8 @@ function test_pipes()
 	exec_test "cat $F_TEST | x | grep dream | wc -l"
 	exec_test "cat $F_TEST | grep dream | x | wc -l"
 	exec_test 'cat /dev/random | head -c 100 | wc -c'
+	exec_test 'x | x | x | x | x'
+	exec_test 'x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x'
 	exec_test 'ls | ls | ls'
 	exec_test 'ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls'
 }
@@ -647,6 +654,13 @@ function test_redir_infile()
 	exec_test "cat < $F_TEST <"
 	exec_test "cat < $F_TEST < $F_TEST_2"
 	exec_test "<$F_TEST cat < $F_TEST_2"
+	exec_test "cat << < $F_TEST"
+	exec_test "cat << << $F_TEST"
+	exec_test "cat <<<< $F_TEST"
+	exec_test "cat < $F_FORBIDDEN < $F_TEST"
+	exec_test "cat < $F_TEST < $F_FORBIDDEN"
+	exec_test "cat < $F_FORBIDDEN | cat < $F_TEST"
+	exec_test "cat < $F_TEST | cat < $F_FORBIDDEN"
 }
 
 function test_redir_outfile_trunc()
@@ -674,6 +688,24 @@ function test_redir_all()
 	exec_test '<a cat <b <c'
 }
 
+function test_exit_status()
+{
+	print_h3 "EXIT_STATUS"
+	exec_test 'echo $?'
+	exec_test 'echo; echo $?'
+	exec_test '$?; echo $?'
+	exec_test 'fakecmd; echo $?'
+	exec_test "cat < $F_DOES_NOT_EXIST, echo \$?"
+	exec_test "cat < $F_FORBIDDEN; echo \$?"
+	exec_test "./$F_FORBIDDEN; echo \$?"
+	exec_test "cd $D_EXISTS; echo \$?" 
+	exec_test "cd $D_FORBIDDEN; echo \$?"
+	exec_test "cd dir_does_not_exist; echo \$?"
+	exec_test "cd $F_DOES_NOT_EXIST; echo \$?"
+	exec_test "cd $F_TEST; echo \$?"
+	exec_test "ls dir_does_not_exist; echo \$?"
+}
+
 #################### BEGIN TESTS ####################
 remove_test_files
 printf "$BOLD$MAGENTA"
@@ -687,11 +719,16 @@ printf "$RESET"
 echo
 
 # Compile and set executable rights
-printf $CYAN"Making minishell...\n"$RESET
+printf $CYAN"Making minishell...$RED\n"
 make -C "$MINISHELL_PATH" >/dev/null
+if [ $? -eq 0 ]; then
+   printf $RESET$GREEN"Minishell ready.\n"$RESET
+else
+	printf $RESET$RED"Minishell compilation failed.\n"$RESET
+	exit 1
+fi
 cp "$MINISHELL_PATH$MINISHELL_NAME" .
 chmod 755 minishell
-printf $GREEN"Minishell ready.\n"$RESET
 
 create_test_files
 
@@ -724,15 +761,19 @@ test_builtin_cd
 #################################### EXIT
 test_builtin_exit
 
-#print_h2 "REDIRECTION TESTS"
+
+print_h2 "REDIRECTION TESTS"
 #################################### INFILES
-#test_redir_infile
+test_redir_infile
 #################################### OUTFILES TRUNC
 #test_redir_outfile_trunc
 #################################### OUTFILES APPEND
 #test_redir_outfile_append
 #################################### FILES
 #test_redir_all
+
+print_h2 "EXIT STATUS TESTS"
+test_exit_status
 
 <<COMMENT
 exec_test 'ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls'
@@ -814,3 +855,4 @@ print_h2 "NOTICE"
 printf "This tester does not test for memory leaks.\n"
 printf "Some tests still need to be done manually, particularly for:\n\t* 'ctrl-c', 'ctrl-\\' and 'ctrl-D'.\n"
 remove_test_files
+rm -rf "./$MINISHELL_NAME"
