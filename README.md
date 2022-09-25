@@ -11,8 +11,8 @@ This tester runs 300+ tests:
 	* piped commands (`|`)
 * Parsing & syntax error tests
 	* quotes (`"` and `'`)
-* Environment variable expansion (`$`)
-* Builtins:
+* Environment variable expansion tests (`$`)
+* Builtin tests:
 	* `echo`
 	* `env`
 	* `export`
@@ -24,7 +24,7 @@ This tester runs 300+ tests:
 	* `<`
 	* `>`
 	* `>>`
-* Exit status (`$?`)
+* Exit status tests (`$?`)
 
 It compares your Minishell output (file output, standard output, standard error and exit codes) against Bash. If the output does not match, the tester displays the differences.
 
