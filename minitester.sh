@@ -23,28 +23,46 @@ WHITE="\e[37m"
 BWHITE="\e[97m"
 
 #################### TEST FILES ####################
+
+# Store minishell STDOUT output
 M_OUT="./minitests/minishell_out"
+# Store minishell STDERR output
 M_ERR="./minitests/minishell_err"
+# Store minishell error message only for comparison with bash
 M_ERR_CMP="./minitests/minishell_err_cmp"
+# Store minishell exit status
 M_EXT="./minitests/minishell_exit"
 
+# Store bash STDOUT output
 B_OUT="./minitests/bash_out"
+# Store bash STDERR output
 B_ERR="./minitests/bash_err"
+# Store bash error message only for comparison with minishell
 B_ERR_CMP="./minitests/bash_err_cmp"
+# Store bash exit status
 B_EXT="./minitests/bash_exit"
 
-F_EXISTING="existing_file"
-F_DOES_NOT_EXIST="file_does_not_exist"
-F_TEST="test_file.txt"
-F_TEST_2="test_file_2.txt"
-F_TEST_OUT="outfile"
-F_TEST_OUT_M="outfile_minishell"
-F_TEST_OUT="outfile_2"
-F_TEST_OUT_M="outfile_2_minishell"
-F_EXECUTABLE="executable_file"
-F_FORBIDDEN="forbidden"
+# Test dirs
 D_EXISTS="existing_dir"
 D_FORBIDDEN="forbidden_dir"
+
+# Test files
+F_EXISTING="existing_file"
+F_DOES_NOT_EXIST="file_does_not_exist"
+F_EXECUTABLE="executable_file"
+F_FORBIDDEN="forbidden"
+
+# Test infiles
+F_TEST="test_file.txt"
+F_TEST_2="test_file_2.txt"
+
+# Test outfiles
+declare -i outfile1_ok=0
+F_TEST_OUT="outfile"
+F_TEST_OUT_M="outfile_minishell"
+declare -i outfile2_ok=0
+F_TEST_OUT="outfile_2"
+F_TEST_OUT_M="outfile_2_minishell"
 
 #################### TEST COUNT ####################
 declare -i test_num=0
@@ -58,17 +76,27 @@ declare -i tests_failed=0
 function create_test_files()
 {
 	printf $CYAN"Creating test files...\n$RESET"
+
+	# Make a directory to store minishell and bash outputs
 	mkdir -p minitests
-	echo "This file exists and has normal permissions" > "$F_EXISTING"
-	echo -e "Take this kiss upon the brow!\nAnd, in parting from you now,\nThus much let me avow-\nYou are not wrong, who deem\nThat my days have been a dream;\nYet if hope has flown away\nIn a night, or in a day,\nIn a vision, or in none,\nIs it therefore the less gone?\nAll that we see or seem\nIs but a dream within a dream.\n\nI stand amid the roar\nOf a surf-tormented shore,\nAnd I hold within my hand\nGrains of the golden sand-\nHow few! yet how they creep\nThrough my fingers to the deep,\nWhile I weep- while I weep!\nO God! can I not grasp\nThem with a tighter clasp?\nO God! can I not save\nOne from the pitiless wave?\nIs all that we see or seem\nBut a dream within a dream?\n\nEdgar Allan Poe\nA Dream Within a Dream" > "$F_TEST"
-	man bash > "$F_TEST_2"
+	# Make a directory with normal permissions
 	mkdir -p $D_EXISTS
-	echo -e "#!/bin/bash\nprintf \"hello world\"" > "$F_EXECUTABLE"
-	chmod 755 "$F_EXECUTABLE"
-	echo "This file is forbidden" > "$F_FORBIDDEN"
-	chmod 000 "$F_FORBIDDEN"
+	# Make a directory with no permissions
 	mkdir "$D_FORBIDDEN"
 	chmod 000 "$D_FORBIDDEN"
+	# Make existing file with normal permissions
+	echo "This file exists and has normal permissions" > "$F_EXISTING"
+	# Make basic file test 1 for input
+	echo -e "Take this kiss upon the brow!\nAnd, in parting from you now,\nThus much let me avow-\nYou are not wrong, who deem\nThat my days have been a dream;\nYet if hope has flown away\nIn a night, or in a day,\nIn a vision, or in none,\nIs it therefore the less gone?\nAll that we see or seem\nIs but a dream within a dream.\n\nI stand amid the roar\nOf a surf-tormented shore,\nAnd I hold within my hand\nGrains of the golden sand-\nHow few! yet how they creep\nThrough my fingers to the deep,\nWhile I weep- while I weep!\nO God! can I not grasp\nThem with a tighter clasp?\nO God! can I not save\nOne from the pitiless wave?\nIs all that we see or seem\nBut a dream within a dream?\n\nEdgar Allan Poe\nA Dream Within a Dream" > "$F_TEST"
+	# Make basic file test 2 for input
+	man bash > "$F_TEST_2"
+	# Make basic executable file
+	echo -e "#!/bin/bash\nprintf \"hello world\"" > "$F_EXECUTABLE"
+	chmod 755 "$F_EXECUTABLE"
+	# Make file with no permissions
+	echo "This file is forbidden" > "$F_FORBIDDEN"
+	chmod 000 "$F_FORBIDDEN"
+
 	printf $GREEN"Test files created.\n$RESET"
 }
 
