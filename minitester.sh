@@ -694,8 +694,9 @@ function test_builtin_echo_no_env()
 function test_builtin_env()
 {
 	print_h3 "ENV"
-	exec_test 'ENV | wc -l'
-	exec_test 'Env | wc -l'
+	exec_test 'ENV | sort | grep -v SHLVL | grep -v _='
+	exec_test 'Env | sort | grep -v SHLVL | grep -v _='
+	exec_test 'env | sort | grep -v SHLVL | grep -v _='
 	exec_test 'env | wc -l'
 	exec_test 'env | grep PATH'
 }
