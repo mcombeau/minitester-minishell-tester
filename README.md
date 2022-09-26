@@ -3,7 +3,7 @@ A simple tester for 42 school project minishell.
 
 ## Tests Performed
 
-This tester runs 300+ tests:
+This tester runs 500+ tests:
 
 * Execution tests:
 	* executables with relative paths

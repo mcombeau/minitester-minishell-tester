@@ -1,4 +1,7 @@
 #!bin/bash
+###################### NOTES #######################
+# TODO: add testing for files with strange names, i.e. with quotes
+
 ################## MINISHELL PATH ##################
 MINISHELL_PATH="../"
 MINISHELL_NAME="minishell"
@@ -23,7 +26,10 @@ WHITE="\e[37m"
 BWHITE="\e[97m"
 
 #################### TEST FILES ####################
-
+declare -i stdout_ok=0
+declare -i stderr_ok=0
+declare -i exit_ok=0
+declare -i output_diff_ok=0
 # Store minishell STDOUT output
 M_OUT="./minitests/minishell_out"
 # Store minishell STDERR output
@@ -53,20 +59,21 @@ F_EXECUTABLE="executable_file"
 F_FORBIDDEN="forbidden"
 
 # Test infiles
-F_TEST="test_file.txt"
-F_TEST_2="test_file_2.txt"
+F_IN1="infile.txt"
+F_IN2="infile_2.txt"
 
 # Test outfiles
 declare -i outfile1_ok=0
-F_TEST_OUT="outfile"
-F_TEST_OUT_M="outfile_minishell"
 declare -i outfile2_ok=0
-F_TEST_OUT="outfile_2"
-F_TEST_OUT_M="outfile_2_minishell"
+F_OUT1="out"
+F_OUT1_M="out_minishell"
+F_OUT1_B="out_bash"
+F_OUT2="out_2"
+F_OUT2_M="out_2_minishell"
+F_OUT2_B="out_2_bash"
 
 #################### TEST COUNT ####################
 declare -i test_num=0
-declare -i total_tests=0
 declare -i tests_passed=0
 declare -i tests_failed=0
 
@@ -87,9 +94,9 @@ function create_test_files()
 	# Make existing file with normal permissions
 	echo "This file exists and has normal permissions" > "$F_EXISTING"
 	# Make basic file test 1 for input
-	echo -e "Take this kiss upon the brow!\nAnd, in parting from you now,\nThus much let me avow-\nYou are not wrong, who deem\nThat my days have been a dream;\nYet if hope has flown away\nIn a night, or in a day,\nIn a vision, or in none,\nIs it therefore the less gone?\nAll that we see or seem\nIs but a dream within a dream.\n\nI stand amid the roar\nOf a surf-tormented shore,\nAnd I hold within my hand\nGrains of the golden sand-\nHow few! yet how they creep\nThrough my fingers to the deep,\nWhile I weep- while I weep!\nO God! can I not grasp\nThem with a tighter clasp?\nO God! can I not save\nOne from the pitiless wave?\nIs all that we see or seem\nBut a dream within a dream?\n\nEdgar Allan Poe\nA Dream Within a Dream" > "$F_TEST"
+	echo -e "Take this kiss upon the brow!\nAnd, in parting from you now,\nThus much let me avow-\nYou are not wrong, who deem\nThat my days have been a dream;\nYet if hope has flown away\nIn a night, or in a day,\nIn a vision, or in none,\nIs it therefore the less gone?\nAll that we see or seem\nIs but a dream within a dream.\n\nI stand amid the roar\nOf a surf-tormented shore,\nAnd I hold within my hand\nGrains of the golden sand-\nHow few! yet how they creep\nThrough my fingers to the deep,\nWhile I weep- while I weep!\nO God! can I not grasp\nThem with a tighter clasp?\nO God! can I not save\nOne from the pitiless wave?\nIs all that we see or seem\nBut a dream within a dream?\n\nEdgar Allan Poe\nA Dream Within a Dream" > "$F_IN1"
 	# Make basic file test 2 for input
-	man bash > "$F_TEST_2"
+	man bash | head -n 12 > "$F_IN2"
 	# Make basic executable file
 	echo -e "#!/bin/bash\nprintf \"hello world\"" > "$F_EXECUTABLE"
 	chmod 755 "$F_EXECUTABLE"
@@ -102,29 +109,104 @@ function create_test_files()
 
 function remove_test_files()
 {
-	rm -rf minitests $F_TEST $F_TEST_2 $F_EXISTING $F_EXECUTABLE $F_FORBIDDEN $D_EXISTS $D_FORBIDDEN
+	rm -rf minitests $D_EXISTS $D_FORBIDDEN
+	rm -f $F_IN1 $F_IN2 $F_EXISTING $F_EXECUTABLE $F_FORBIDDEN
 }
 
 function remove_outfiles()
 {
-	rm $F_TEST_OUT $F_TEST_OUT_BACKUP
-}
-
-function check_outfile()
-{
-	if cmp -s "$F_TEST_OUT_M" "$F_TEST_OUT"; then
-		printf "%s Outfile:$BOLD$GREEN OK \n$RESET" "----------"
-	else
-		printf "%s Outfile:$BOLD$RED KO \n$RESET" "----------"
-		printf "%s Outfile diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
-		diff --color "$F_TEST_OUT_M" "$F_TEST_OUT"
-		rm "$F_TEST_OUT" "$F_TEST_OUT"
-	fi
+	rm -f $F_OUT1 $F_OUT1_M $F_OUT1_B $F_OUT2 $F_OUT2_M $F_OUT2_B
 }
 
 ###################################### Output checking
+function reset_comparators()
+{
+	stdout_ok=0
+	stderr_ok=0
+	exit_ok=0
+	output_diff_ok=0
+	outfile1_ok=0
+	outfile2_ok=0
+}
+
+function check_outfiles()
+{
+	# ok = 2 if neither the bash file nor the minishell file exist
+	# ok = 1 if both bash file and minishell file exist and are the same
+	# ok = 0 if one or the other does not exist or if their contents do not match
+	if test -f "$F_OUT1_B"; then
+		if test -f "$F_OUT1_M" && cmp -s "$F_OUT1_M" "$F_OUT1_B"; then
+			outfile1_ok=1
+		else
+			outfile1_ok=0
+		fi
+	elif test -f "$F_OUT1_M"; then
+		outfile1_ok=0
+	else
+		outfile1_ok=2
+	fi
+	if test -f "$F_OUT2_B"; then
+		if test -f "$F_OUT2_M" && cmp -s "$F_OUT2_M" "$F_OUT2_B"; then
+			outfile2_ok=1
+		else
+			outfile2_ok=0
+		fi
+	elif test -f "$F_OUT2_M"; then
+		outfile2_ok=0
+	else
+		outfile2_ok=2
+	fi
+}
+
+function check_stdout()
+{
+	if cmp -s "$M_OUT" "$B_OUT"; then
+		stdout_ok=1
+	else
+		stdout_ok=0
+	fi
+}
+
+function check_stderr()
+{
+	cat -e $M_ERR | head -1 | rev | cut -d ':' -f 1 | tr '[:upper:]' '[:lower:]' | rev >$M_ERR_CMP
+	cat -e $B_ERR | head -1 | rev | cut -d ':' -f 1 | tr '[:upper:]' '[:lower:]' | rev >$B_ERR_CMP
+	if cmp -s "$M_ERR_CMP" "$B_ERR_CMP"; then
+		stderr_ok=1
+	elif grep -q "syntax error" "$M_ERR" && grep -q "syntax error" "$B_ERR"; then
+		stderr_ok=1
+	else
+		stderr_ok=0
+	fi
+}
+
+function check_exit_status()
+{
+	if cmp -s "$M_EXT" "$B_EXT"; then
+		exit_ok=1
+	else
+		exit_ok=0
+	fi
+}
+
+function check_output_diff()
+{
+	if [[ "$@" == '.' ]] && grep -q "command not found" "$M_ERR" && grep -q "127" "$M_EXT"; then
+		output_diff_ok=1
+	elif [[ "$@" == *'||'* ]] && grep -q "syntax error" "$M_ERR" && grep -q "2" "$M_EXT"; then
+		output_diff_ok=2
+	elif [[ "$@" == *'unset'* ]] && grep -q "not a valid identifier" "$M_ERR"; then
+		output_diff_ok=3
+	elif [[ "$@" == *';'* ]] && grep -q "command not found" "$M_ERR" && grep -q "127" "$M_EXT"; then
+		output_diff_ok=4
+	else
+		output_diff_ok=0;
+	fi
+}
+
 function output_ok()
 {
+	printf "$BOLD%s$RESET\t" "$test_num"
 	printf "$BOLD$GREEN%s$RESET" "[OK] "
 	printf "$CYAN [$@] $RESET"
 	tests_passed+=1
@@ -132,101 +214,225 @@ function output_ok()
 
 function output_ok_diff()
 {
+	printf "$BOLD$YELLOW%s$RESET\n" "----------------------------------------------------------------"
+	printf "$BOLD%s$RESET\t" "$test_num"
 	printf "$BOLD$YELLOW%s$RESET" "[OK] "
 	printf "$CYAN [$@] $RESET"
 	tests_passed+=1
 	echo
 	printf "%s Output differs from Bash:$YELLOW\nOK" "----------"
-	if [[ "$@" == *'||'* ]]; then
-		printf ": \"||\" implementation not required in minishell mandatory part"
-	elif [[ "$@" == '.' ]]; then
+	if [ $output_diff_ok -eq 1 ]; then
 		printf ": \".\" implementation not required in minishell mandatory part"
-	elif [[ "$@" == *'unset'* ]]; then
+	elif [ $output_diff_ok -eq 2 ]; then
+		printf ": \"||\" implementation not required in minishell mandatory part"
+	elif [ $output_diff_ok -eq 3 ]; then
 		printf ": minishell shows 'not a valid identifier' error whereas Bash no longer does on some systems"
-	elif [[ "$@" == *';'* ]]; then
+	elif [ $output_diff_ok -eq 4 ]; then
 		printf ": \";\" implementation not required in minishell"
 	fi
-	printf "$RESET"
+	printf "$RESET\n"
+	printf "$BOLD$YELLOW%s$RESET" "----------------------------------------------------------------"
 }
 
 function output_fail()
 {
+	printf "$BOLD$RED%s$RESET\n" "----------------------------------------------------------------"
+	printf "$BOLD%s$RESET\t" "$test_num"
 	printf "$BOLD$RED%s$RESET" "[KO] "
 	printf "$CYAN [$@] $RESET"
 	tests_failed+=1
 	echo
-	if cmp -s "$M_OUT" "$B_OUT"; then
+	if test -f $F_OUT1_B; then
+		if [[ $outfile1_ok -eq 1 && "$@" == *"$F_OUT1"* ]]; then
+			printf "%s Outfile "\'$F_OUT1\'":$BOLD$GREEN OK \n$RESET" "----------"
+		elif [ $outfile1_ok -eq 0 ]; then
+			printf "%s Outfile "\'$F_OUT1\'":$BOLD$RED KO \n$RESET" "----------"
+			printf "%s Outfile diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
+			diff --color "$F_OUT1_M" "$F_OUT1_B"
+			rm -f "$F_OUT1_M" "$F_OUT1_B"
+		fi
+	fi
+	if test -f $F_OUT2_B; then
+		if [[ $outfile2_ok -eq 1 && "$@" == *"$F_OUT2"* ]]; then
+			printf "%s Outfile "\'$F_OUT2\'":$BOLD$GREEN OK \n$RESET" "----------"
+		elif [ $outfile2_ok -eq 0 ]; then
+			printf "%s Outfile "\'$F_OUT2\'":$BOLD$RED KO \n$RESET" "----------"
+			printf "%s Outfile diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
+			diff --color "$F_OUT2_M" "$F_OUT2_B"
+			rm -f "$F_OUT2_M" "$F_OUT2_B"
+		fi
+	fi
+	if [ $stdout_ok -eq 1 ]; then
 		printf "%s STDOUT output:$BOLD$GREEN OK \n$RESET" "----------"
 	else
 		printf "%s STDOUT output:$BOLD$RED KO \n$RESET" "----------"
 		printf "%s STDOUT diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
 		diff --color "$M_OUT" "$B_OUT"
-		rm "$M_OUT" "$B_OUT"
+		rm -f "$M_OUT" "$B_OUT"
 	fi
-	if cmp -s "$M_ERR_CMP" "$B_ERR_CMP"; then
+	if [ $stderr_ok -eq 1 ]; then
 		printf "%s STDERR output:$BOLD$GREEN OK \n$RESET" "----------"
 	else
 		printf "%s STDERR output:$BOLD$RED KO \n$RESET" "----------"
 		printf "%s STDERR diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
 		diff --color "$M_ERR" "$B_ERR"
-		rm "$M_ERR" "$M_ERR_CMP" "$B_ERR" "$B_ERR_CMP"
+		rm -f "$M_ERR" "$M_ERR_CMP" "$B_ERR" "$B_ERR_CMP"
 	fi
-	if cmp -s "$M_EXT" "$B_EXT"; then
+	if [ $exit_ok -eq 1 ]; then
 		printf "%s Exit status:$BOLD$GREEN OK \n$RESET" "----------"
 	else
 		printf "%s Exit status:$BOLD$RED KO \n$RESET" "----------"
 		printf "%s Exit diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
 		diff --color "$M_EXT" "$B_EXT"
-		rm "$M_EXT" "$B_EXT"
+		rm -f "$M_EXT" "$B_EXT"
 	fi
+	printf "$BOLD$RED%s$RESET\n" "----------------------------------------------------------------"
 }
 
 function check_output()
 {
-	cat -e $M_ERR | head -1 | rev | cut -d ':' -f 1 | tr '[:upper:]' '[:lower:]' | rev >$M_ERR_CMP
-	cat -e $B_ERR | head -1 | rev | cut -d ':' -f 1 | tr '[:upper:]' '[:lower:]' | rev >$B_ERR_CMP
-		printf "%s\t" "$test_num"
-	if cmp -s "$M_OUT" "$B_OUT" && cmp -s "$M_EXT" "$B_EXT" && cmp -s "$M_ERR_CMP" "$B_ERR_CMP"; then
+	check_outfiles
+	check_stdout
+	check_exit_status
+	check_stderr
+
+	if [ $outfile1_ok -ge 1 ] && [ $outfile2_ok -ge 1 ] && [ $stdout_ok -eq 1 ] && [ $stderr_ok -eq 1 ] && [ $exit_ok -eq 1 ]; then
 		output_ok "$@"
-	elif cmp -s "$M_OUT" "$B_OUT" && cmp -s "$M_EXT" "$B_EXT" && grep -q "syntax error" "$M_ERR" && grep -q "syntax error" "$B_ERR"; then
-		output_ok "$@"
-	elif [[ "$@" == '.' ]] && grep -q "command not found" "$M_ERR" && grep -q "127" "$M_EXT"; then
-		output_ok_diff "$@"
-	elif [[ "$@" == *'||'* ]] && grep -q "syntax error" "$M_ERR" && grep -q "2" "$M_EXT"; then
-		output_ok_diff "$@"
-	elif [[ "$@" == *'unset'* ]] && grep -q "not a valid identifier" "$M_ERR"; then
-		output_ok_diff "$@"
-	elif [[ "$@" == *';'* ]] && grep -q "command not found" "$M_ERR" && grep -q "127" "$M_EXT"; then
-		output_ok_diff "$@"
 	else
-		output_fail "$@"
+		check_output_diff "$@"
+		if [ $output_diff_ok -ge 1 ]; then
+			output_ok_diff "$@"
+		else
+			output_fail "$@"
+		fi
+	fi
+	reset_comparators
+}
+
+function restore_outfiles()
+{
+	if [ $@ == "M" ]; then
+		if test -f "$F_OUT1_M"; then
+			rm -f "$F_OUT1"
+			mv "$F_OUT1_M" "$F_OUT1"
+			rm -f "$F_OUT1_M"
+		fi
+		if test -f "$F_OUT2_M"; then
+			rm -f "$F_OUT2"
+			mv "$F_OUT2_M" "$F_OUT2"
+			rm -f "$F_OUT2_M"
+		fi
+	elif [ $@ == "B" ]; then
+		if test -f $F_OUT1_B; then
+			rm -f "$F_OUT1"
+			mv "$F_OUT1_B" "$F_OUT1"
+			rm -f "$F_OUT1_B"
+		fi
+		if test -f $F_OUT2_B; then
+			rm -f "$F_OUT2"
+			mv "$F_OUT2_B" "$F_OUT2"
+			rm -f "$F_OUT2_B"
+		fi
 	fi
 }
 
-###################################### Execution tests
-function exec_test()
+function save_outfiles()
 {
-	./minishell -c "$@" 1>$M_OUT 2>$M_ERR
-	echo "$?">$M_EXT
-	bash -c "$@" 1>$B_OUT 2>$B_ERR
-	echo "$?">$B_EXT
-
-	check_output "$@"
-	test_num+=1
-	total_tests+=1
-	echo
-	sleep 0.1
+	if [ $@ == "M" ]; then
+		if test -f "$F_OUT1"; then
+			mv "$F_OUT1" "$F_OUT1_M"
+		fi
+		if test -f "$F_OUT2"; then
+			mv "$F_OUT2" "$F_OUT2_M"
+		fi
+	fi
+	if [ $@ == "B" ]; then
+		if test -f "$F_OUT1"; then
+			mv "$F_OUT1" "$F_OUT1_B"
+		fi
+		if test -f "$F_OUT2"; then
+			mv "$F_OUT2" "$F_OUT2_B"
+		fi
+	fi
 }
 
-function exec_test_outfile()
+function debug_print_outfiles()
 {
+	echo "=============== DEBUG PRINT OUTFILES ================="
+	echo "------------ OUTFILE 1 ------------"
+	if test -f "$F_OUT1"; then
+		cat -e "$F_OUT1"
+		echo
+		echo "-----------------------------------"
+	else
+		echo "No outfile1"
+		echo "-----------------------------------"
+	fi
+	echo "------------ OUTFILE 2 ------------"
+	if test -f "$F_OUT2"; then
+		cat -e "$F_OUT2"
+	else
+		echo "No outfile2"
+		echo "-----------------------------------"
+	fi
+}
+
+function debug_print_mini_outfiles()
+{
+	echo "=========== DEBUG PRINT MINI OUTFILES ================"
+	echo "------------ OUTFILE 1 ------------"
+	if test -f "$F_OUT1_M"; then
+		cat -e "$F_OUT1_M"
+		echo
+		echo "-----------------------------------"
+	else
+		echo "No minishell outfile1"
+		echo "-----------------------------------"
+	fi
+	if test -f "$F_OUT2_M"; then
+		cat -e "$F_OUT2_M"
+		echo
+		echo "-----------------------------------"
+	else
+		echo "No minishell outfile2"
+		echo "-----------------------------------"
+	fi
+}
+
+function debug_print_bash_outfiles()
+{
+	echo "=========== DEBUG PRINT BASH OUTFILES ================"
+	echo "------------ OUTFILE 1 ------------"
+	if test -f "$F_OUT1_B"; then
+		cat -e "$F_OUT1_B"
+		echo
+		echo "-----------------------------------"
+	else
+		echo "No bash outfile1"
+		echo "-----------------------------------"
+	fi
+	if test -f "$F_OUT2_B"; then
+		cat -e "$F_OUT2_B"
+		echo
+		echo "-----------------------------------"
+	else
+		echo "No bash outfile2"
+		echo "-----------------------------------"
+	fi
+}
+
+###################################### Tester function
+function exec_test()
+{
+	restore_outfiles "M"
 	./minishell -c "$@" 1>$M_OUT 2>$M_ERR
 	echo "$?">$M_EXT
-	cp $F_TEST_OUT $F_TEST_OUT_M
-	rm $F_TEST_OUT
+	save_outfiles "M"
+	restore_outfiles "B"
 	bash -c "$@" 1>$B_OUT 2>$B_ERR
 	echo "$?">$B_EXT
-	check_outfile
+	save_outfiles "B"
+
 	check_output "$@"
 	test_num+=1
 	echo
@@ -237,15 +443,19 @@ function exec_test_outfile()
 function print_h2()
 {
 	printf	"$BOLD$MAGENTA\n"
-	printf	"%s\n" "----------------------------------------------------------------"
-	printf	"%11c%s\n" " " "$@"
-	printf	"%s\n$RESET" "----------------------------------------------------------------"
+	printf	"%s\n\n" "+=============================================================+"
+	printf	"%11c%s\n\n" " " "$@"
+	printf	"%s\n$RESET" "+=============================================================+"
 }
 
 function print_h3()
 {
-	echo
-	printf	"$BOLD$YELLOW-----------%s$RESET\n" "$@"
+	printf	"$BOLD$YELLOW\n"
+	printf	"%s\n" "+=============================================================+"
+	printf	"%11c%s\n" " " "$@"
+	printf	"%s\n$RESET" "+=============================================================+"
+#	echo
+#	printf	"$BOLD$YELLOW-----------%s$RESET\n" "$@"
 }
 
 ################### TEST FUNCTIONS ##################
@@ -280,14 +490,14 @@ function test_pipes()
 {
 	print_h3 "PIPE TESTS"
 	exec_test 'ls -l | wc -l'
-	exec_test "cat $F_TEST | grep dream"
-	exec_test "cat $F_TEST | grep dream | cat -e"
-	exec_test "cat $F_TEST | grep dream | wc -l"
-	exec_test "cat $F_TEST | grep dream | wc -l | cd x"
-	exec_test "cat $F_TEST | grep dream | wc -l | x"
-	exec_test "x | cat $F_TEST | grep dream | wc -l"
-	exec_test "cat $F_TEST | x | grep dream | wc -l"
-	exec_test "cat $F_TEST | grep dream | x | wc -l"
+	exec_test "cat $F_IN1 | grep dream"
+	exec_test "cat $F_IN1 | grep dream | cat -e"
+	exec_test "cat $F_IN1 | grep dream | wc -l"
+	exec_test "cat $F_IN1 | grep dream | wc -l | cd x"
+	exec_test "cat $F_IN1 | grep dream | wc -l | x"
+	exec_test "x | cat $F_IN1 | grep dream | wc -l"
+	exec_test "cat $F_IN1 | x | grep dream | wc -l"
+	exec_test "cat $F_IN1 | grep dream | x | wc -l"
 	exec_test 'cat /dev/random | head -c 100 | wc -c'
 	exec_test 'x | x | x | x | x'
 	exec_test 'x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x'
@@ -384,10 +594,10 @@ function test_syntax_errors()
 	exec_test 'ls << <'
 	exec_test 'ls << <<'
 	exec_test 'ls > >> |'
-	exec_test "< < $F_TEST cat"
-	exec_test "<< << $F_TEST cat"
-	exec_test "<< < $F_TEST cat"
-	exec_test "< << $F_TEST cat"
+	exec_test "< < $F_IN1 cat"
+	exec_test "<< << $F_IN1 cat"
+	exec_test "<< < $F_IN1 cat"
+	exec_test "< << $F_IN1 cat"
 	exec_test '< $FAKE_VAR cat'
 	exec_test 'cat < $FAKE_VAR'
 	exec_test 'cat < $123456'
@@ -647,7 +857,7 @@ function test_builtin_exit()
 	exec_test 'exit -9999999999999999999999999999999999999999999999'
 	exec_test 'exit _0'
 	exec_test 'exit 0_'
-	exec_test "exit 5 < $F_TEST"
+	exec_test "exit 5 < $F_IN1"
 	exec_test 'exit 1 | exit 0'
 	exec_test 'exit 0 | exit 1'
 	exec_test 'ls | exit'
@@ -665,11 +875,11 @@ function test_builtin_exit()
 function test_redir_infile()
 {
 	print_h3 "INFILE"
-	exec_test "< $F_TEST cat"
-	exec_test "<$F_TEST cat"
-	exec_test "cat < $F_TEST"
-	exec_test "cat <$F_TEST"
-	exec_test "< $F_TEST"
+	exec_test "< $F_IN1 cat"
+	exec_test "<$F_IN1 cat"
+	exec_test "cat < $F_IN1"
+	exec_test "cat <$F_IN1"
+	exec_test "< $F_IN1"
 	exec_test "< $F_DOES_NOT_EXIST"
 	exec_test "< $F_FORBIDDEN"
 	exec_test 'cat <'
@@ -681,44 +891,169 @@ function test_redir_infile()
 	exec_test "cat <$F_FORBIDDEN"
 	exec_test "< $F_FORBIDDEN cat"
 	exec_test "<$F_FORBIDDEN cat"
-	exec_test "< $F_DOES_NOT_EXIST < $F_TEST cat"
-	exec_test "cat < $F_TEST < $F_DOES_NOT_EXIST"
-	exec_test "cat < $F_TEST < $F_TEST < $F_TEST"
-	exec_test "cat < $F_TEST <"
-	exec_test "cat < $F_TEST < $F_TEST_2"
-	exec_test "<$F_TEST cat < $F_TEST_2"
-	exec_test "cat << < $F_TEST"
-	exec_test "cat << << $F_TEST"
-	exec_test "cat <<<< $F_TEST"
-	exec_test "cat < $F_FORBIDDEN < $F_TEST"
-	exec_test "cat < $F_TEST < $F_FORBIDDEN"
-	exec_test "cat < $F_FORBIDDEN | cat < $F_TEST"
-	exec_test "cat < $F_TEST | cat < $F_FORBIDDEN"
+	exec_test "< $F_DOES_NOT_EXIST < $F_IN1 cat"
+	exec_test "cat < $F_IN1 < $F_DOES_NOT_EXIST"
+	exec_test "cat < $F_IN1 < $F_IN1 < $F_IN1"
+	exec_test "cat < $F_IN1 <"
+	exec_test "cat < $F_IN1 < $F_IN2"
+	exec_test "<$F_IN1 cat < $F_IN2"
+	exec_test "cat << < $F_IN1"
+	exec_test "cat << << $F_IN1"
+	exec_test "cat <<<< $F_IN1"
+	exec_test "cat < $F_FORBIDDEN < $F_IN1"
+	exec_test "cat < $F_IN1 < $F_FORBIDDEN"
+	exec_test "cat < $F_FORBIDDEN | cat < $F_IN1"
+	exec_test "cat < $F_IN1 | cat < $F_FORBIDDEN"
 }
 
 function test_redir_outfile_trunc()
 {
 	print_h3 "TRUNC OUTFILE"
-	exec_test '> x'
-	exec_test 'ls > p | env > q'
-	exec_test ''
+	exec_test "> $F_OUT1"
+	remove_outfiles
+	exec_test "> $F_FORBIDDEN"
+	exec_test "echo hello world >"
+	exec_test "echo hello world > $F_OUT1"
+	exec_test "echo abcdefghijk >$F_OUT1"
+	exec_test "echo hello world> $F_OUT1"
+	exec_test "> $F_OUT1 echo abcdefghijk"
+	exec_test ">$F_OUT1 echo hello world"
+	remove_outfiles
+	exec_test "echo hello world > $F_FORBIDDEN"
+	exec_test "> $F_OUT1 echo hi | echo bye"
+	exec_test "echo ab | echo cde > $F_OUT1"
+	exec_test "cat $F_IN1 > $F_OUT1"
+	exec_test "cat $F_IN1 | wc -l > $F_OUT1"
+	exec_test "cat $F_IN1 | grep dream | sed s/e/../g | sed s/d/X/g > $F_OUT1"
+	exec_test "echo abcdefghijk > $F_OUT1 > $F_OUT2"
+	exec_test "echo hello world > $F_OUT1 > $F_OUT1"
+	exec_test "echo hello world > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1"
+	exec_test "echo hello world > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT2"
+	remove_outfiles
+	exec_test "echo abcdefghijk > $F_FORBIDDEN > $F_OUT1 > $F_OUT2"
+	remove_outfiles
+	exec_test "echo abcdefghijk > $F_OUT1 > $F_FORBIDDEN > $F_OUT2"
+	remove_outfiles
+	exec_test "echo abcdefghijk > $F_OUT1 > $F_OUT2 > $F_FORBIDDEN"
+	exec_test "echo > $F_OUT1 a b c d e"
+	exec_test "echo a > $F_OUT1 b c d e"
+	exec_test "echo a b > $F_OUT1 c d e"
+	exec_test "echo a b c > $F_OUT1 d e"
+	exec_test "echo a b c d > $F_OUT1 e"
+	exec_test "echo a b c d e > $F_OUT1"
+	exec_test "echo > $F_OUT1 a b c d e > $F_OUT2"
+	exec_test "echo a > $F_OUT1 b c d e > $F_OUT2"
+	exec_test "echo a b > $F_OUT1 c d e > $F_OUT2"
+	exec_test "echo a b c > $F_OUT1 d e > $F_OUT2"
+	exec_test "echo a b c d > $F_OUT1 e > $F_OUT2"
+	exec_test "echo a b c d e > $F_OUT1 > $F_OUT2"
+	exec_test "echo hello > $F_OUT1 | echo world > $F_OUT1"
+	exec_test "echo 01234 > $F_OUT1 | echo 56789 > $F_OUT2"
+	remove_outfiles
+	exec_test "echo hello > $F_OUT1 | echo world > $F_FORBIDDEN"
+	remove_outfiles
+	exec_test "echo 01234 > $F_FORBIDDEN | echo 56789 > $F_OUT1"
+	remove_outfiles
 }
 
 function test_redir_outfile_append()
 {
 	print_h3 "APPEND OUTFILE"
-	exec_test ''
+	exec_test ">> $F_OUT1"
+	remove_outfiles
+	exec_test ">> $F_FORBIDDEN"
+	exec_test "echo hello world >>"
+	exec_test "echo hello world >> $F_OUT1"
+	exec_test "echo abcdefghijk >>$F_OUT1"
+	exec_test "echo hello world>> $F_OUT1"
+	exec_test ">> $F_OUT1 echo abcdefghijk"
+	exec_test ">>$F_OUT1 echo hello world"
+	remove_outfiles
+	exec_test "echo hello world >> $F_FORBIDDEN"
+	exec_test ">> $F_OUT1 echo hi | echo bye"
+	exec_test "echo ab | echo cde >> $F_OUT1"
+	exec_test "cat $F_IN1 >> $F_OUT1"
+	exec_test "cat $F_IN1 | wc -l >> $F_OUT1"
+	exec_test "cat $F_IN1 | grep dream | sed s/e/../g | sed s/d/X/g >> $F_OUT1"
+	exec_test "echo abcdefghijk >> $F_OUT1 >> $F_OUT2"
+	exec_test "echo hello world >> $F_OUT1 >> $F_OUT1"
+	exec_test "echo hello world >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1"
+	exec_test "echo hello world >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT2"
+	remove_outfiles
+	exec_test "echo abcdefghijk >> $F_FORBIDDEN >> $F_OUT1 >> $F_OUT2"
+	remove_outfiles
+	exec_test "echo abcdefghijk >> $F_OUT1 >> $F_FORBIDDEN >> $F_OUT2"
+	remove_outfiles
+	exec_test "echo abcdefghijk >> $F_OUT1 >> $F_OUT2 >> $F_FORBIDDEN"
+	remove_outfiles
+	exec_test "echo >> $F_OUT1 a b c d e"
+	exec_test "echo a >> $F_OUT1 b c d e"
+	exec_test "echo a b >> $F_OUT1 c d e"
+	exec_test "echo a b c >> $F_OUT1 d e"
+	exec_test "echo a b c d >> $F_OUT1 e"
+	exec_test "echo a b c d e >> $F_OUT1"
+	remove_outfiles
+	exec_test "echo >> $F_OUT1 a b c d e >> $F_OUT2"
+	exec_test "echo a >> $F_OUT1 b c d e >> $F_OUT2"
+	exec_test "echo a b >> $F_OUT1 c d e >> $F_OUT2"
+	exec_test "echo a b c >> $F_OUT1 d e >> $F_OUT2"
+	exec_test "echo a b c d >> $F_OUT1 e >> $F_OUT2"
+	exec_test "echo a b c d e >> $F_OUT1 >> $F_OUT2"
+	remove_outfiles
+	exec_test "echo hello >> $F_OUT1 | echo world >> $F_OUT1"
+	exec_test "echo 01234 >> $F_OUT1 | echo 56789 >> $F_OUT2"
+	remove_outfiles
+	exec_test "echo hello >> $F_OUT1 | echo world >> $F_FORBIDDEN"
+	remove_outfiles
+	exec_test "echo 01234 >> $F_FORBIDDEN | echo 56789 >> $F_OUT1"
+	remove_outfiles
 }
 
 function test_redir_all()
 {
-	print_h3 "COMBINE INFILE/OUTFILE"
-	exec_test 'echo "File A" > a'
-	exec_test 'echo "File B" >> b'
-	exec_test 'echo File C >c'
-	exec_test '<a cat <b <c'
-	exec_test 'chmod 000 b'
-	exec_test '<a cat <b <c'
+	print_h3 "COMBINATION INFILE/OUTFILE"
+	exec_test "< >> >"
+	exec_test "< > >>"
+	exec_test "> < >>"
+	exec_test "> >> <"
+	exec_test ">> > <"
+	exec_test ">> < >"
+	exec_test "echo ABC > $F_OUT1 | echo DEF >> $F_OUT2"
+	exec_test "echo GHI >> $F_OUT1 | echo KLM > $F_OUT2"
+	exec_test "echo OPQ > $F_OUT1 >> $F_OUT2"
+	exec_test "echo RST >> $F_OUT1 > $F_OUT2"
+	exec_test "< $F_IN1 cat | echo UVW > $F_OUT1 | echo XYZ >> $F_OUT2"
+	exec_test "< $F_IN1 cat > $F_OUT1 | echo ABC >> $F_OUT1 | echo DEF > $F_OUT2"
+	exec_test "cat < $F_OUT1 >"
+	exec_test "cat < $F_OUT1 >>"
+	exec_test "cat < > $F_OUT1"
+	exec_test "cat < >> $F_OUT1"
+	exec_test "cat > >> $F_OUT1"
+	exec_test "cat >> > $F_OUT1"
+	exec_test "< $F_OUT1 cat > $F_OUT1"
+	exec_test "< $F_OUT1 cat >> $F_OUT1"
+	exec_test "cat > $F_OUT1 < $F_OUT1"
+	exec_test "cat >> $F_OUT1 < $F_OUT1"
+	exec_test "cat < $F_OUT1 > $F_OUT1"
+	exec_test "cat < $F_OUT1 >> $F_OUT1"
+	exec_test "< $F_IN1 < $F_IN2 cat > $F_OUT1 >> $F_OUT2"
+	exec_test "< $F_IN1 < $F_IN2 cat >> $F_OUT1 > $F_OUT2"
+	exec_test "< $F_FORBIDDEN < $F_IN2 cat > $F_OUT1 >> $F_OUT2"
+	exec_test "< $F_IN1 < $F_FORBIDDEN cat > $F_OUT1 >> $F_OUT2"
+	exec_test "< $F_IN1 < $F_IN2 cat > $F_FORBIDDEN >> $F_OUT1"
+	exec_test "< $F_IN2 < $F_IN1 cat > $F_OUT1 >> $F_FORBIDDEN"
+	exec_test "< $F_IN1 < $F_IN2 cat >> $F_FORBIDDEN > $F_OUT1"
+	exec_test "< $F_IN2 < $F_IN1 cat >> $F_OUT1 > $F_FORBIDDEN"
+	exec_test "< $F_FORBIDDEN cat > $F_FORBIDDEN >> $F_FORBIDDEN"
+	exec_test "< $F_FORBIDDEN cat >> $F_FORBIDDEN > $F_FORBIDDEN"
+	exec_test "cat >> $F_FORBIDDEN > $F_FORBIDDEN < $F_FORBIDDEN"
+	exec_test "< $F_IN1 cat | grep dream > $F_FORBIDDEN"
+	exec_test "< $F_IN2 cat | grep dream >> $F_FORBIDDEN"
+	exec_test "< $F_IN1 cat >> $F_FORBIDDEN | wc -l > $F_OUT1"
+	exec_test "< $F_IN2 cat > $F_FORBIDDEN | wc -l >> $F_OUT1"
+	exec_test "< $F_IN1 cat >> $F_OUT1 | wc -l > $F_FORBIDDEN"
+	exec_test "< $F_IN2 cat > $F_OUT1 | wc -l >> $F_FORBIDDEN"
+	remove_outfiles
 }
 
 function test_exit_status()
@@ -728,26 +1063,27 @@ function test_exit_status()
 	exec_test 'echo; echo $?'
 	exec_test '$?; echo $?'
 	exec_test 'fakecmd; echo $?'
-	exec_test "cat < $F_DOES_NOT_EXIST, echo \$?"
+	exec_test "cat < $F_DOES_NOT_EXIST; echo \$?"
 	exec_test "cat < $F_FORBIDDEN; echo \$?"
 	exec_test "./$F_FORBIDDEN; echo \$?"
 	exec_test "cd $D_EXISTS; echo \$?" 
 	exec_test "cd $D_FORBIDDEN; echo \$?"
 	exec_test "cd dir_does_not_exist; echo \$?"
 	exec_test "cd $F_DOES_NOT_EXIST; echo \$?"
-	exec_test "cd $F_TEST; echo \$?"
+	exec_test "cd $F_IN1; echo \$?"
 	exec_test "ls dir_does_not_exist; echo \$?"
 }
 
 #################### BEGIN TESTS ####################
 remove_test_files
+remove_outfiles
 printf "$BOLD$MAGENTA"
-printf	"%s\n" "----------------------------------------------------------------"
-echo '	 _   _  _  _  _  _  ___  ___  __  ___  ___  ___ '
-echo '	| \_/ || || \| || ||_ _|| __|/ _||_ _|| __|| o \'
-echo '	| \_/ || || \\ || | | | | _| \_ \ | | | _| |   /'
-echo '	|_| |_||_||_|\_||_| |_| |___||__/ |_| |___||_|\\'
-printf	"%s\n" "----------------------------------------------------------------"
+printf	"%s\n"				"----------------------------------------------------------------"
+printf	"%s\n"				"	 _   _  _  _  _  _  ___  ___  __  ___  ___  ___ "
+printf	"%s\n"				'	| \_/ || || \| || ||_ _|| __|/ _||_ _|| __|| o \'
+printf	"%s\n"				'	| \_/ || || \\ || | | | | _| \_ \ | | | _| |   /'
+printf	$RESET$BYELLOW"%s\n" '	|_| |_||_||_|\_||_| |_| |___||__/ |_| |___||_|\\'
+printf	"%s\n"				"----------------------------------------------------------------"
 printf "$RESET"
 echo
 
@@ -799,21 +1135,24 @@ print_h2 "REDIRECTION TESTS"
 #################################### INFILES
 test_redir_infile
 #################################### OUTFILES TRUNC
-#test_redir_outfile_trunc
+test_redir_outfile_trunc
 #################################### OUTFILES APPEND
-#test_redir_outfile_append
+test_redir_outfile_append
 #################################### FILES
-#test_redir_all
+test_redir_all
 
 print_h2 "EXIT STATUS TESTS"
+#################################### EXIT STATUS
 test_exit_status
 
 print_h2 "RESULTS"
+test_num+=1
 printf $BOLD$GREEN"\tOK$RED\t\tKO$RESET$BOLD\t\tTOTAL\n$RESET"
-printf $BOLD$GREEN"\t%d$RED\t\t%d$RESET$BOLD\t\t%d\n$RESET" $tests_passed $tests_failed $total_tests
+printf $BOLD$GREEN"\t%d$RED\t\t%d$RESET$BOLD\t\t%d\n$RESET" $tests_passed $tests_failed $test_num
 
 print_h2 "NOTICE"
 printf "This tester does not test for memory leaks.\n"
 printf "Some tests still need to be done manually, particularly for:\n\t* 'ctrl-c', 'ctrl-\\' and 'ctrl-D'.\n"
 remove_test_files
-rm -rf "./$MINISHELL_NAME"
+remove_outfiles
+rm -f "./$MINISHELL_NAME"
