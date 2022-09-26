@@ -3,7 +3,7 @@ A simple tester for 42 school project minishell.
 
 ## Tests Performed
 
-This tester runs 500+ tests:
+This tester compares your Minishell output (file output, standard output, standard error and exit codes) against Bash over 500+ tests:
 
 * Execution tests:
 	* executables with relative paths
@@ -26,7 +26,7 @@ This tester runs 500+ tests:
 	* `>>`
 * Exit status tests (`$?`)
 
-It compares your Minishell output (file output, standard output, standard error and exit codes) against Bash. If the output does not match, the tester displays the differences.
+If the output does not match, the tester displays the differences.
 
 However, it does not test for memory leaks or for Norm errors. Some tests must still be performed manually, such as for signals and `ctrl-D` functionality, as well as for the heredoc.
 
