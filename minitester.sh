@@ -224,7 +224,7 @@ function output_ok_diff()
 	echo
 	printf "%s Output differs from Bash:$YELLOW\nOK" "----------"
 	if [ $output_diff_ok -eq 1 ]; then
-		printf ": \".\" implementation not required in minishell mandatory part"
+		printf ": \".\" implementation not required in minishell"
 	elif [ $output_diff_ok -eq 2 ]; then
 		printf ": \"||\" implementation not required in minishell mandatory part"
 	elif [ $output_diff_ok -eq 3 ]; then
@@ -279,7 +279,7 @@ function output_fail()
 	else
 		printf "%s STDERR output:$BOLD$RED KO \n$RESET" "----------"
 		if [[ "$@" == '.' ]]; then
-			printf "\".\" implementation not required in minishell mandatory part\n"
+			printf $YELLOW"\".\" implementation not required in minishell\n"
 			printf "Expected 'command not found' error$RESET\n"
 		fi
 		printf "%s STDERR diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
@@ -1385,7 +1385,7 @@ printf $BOLD$GREEN"\t%d$RED\t\t%d$RESET$BOLD\t\t%d\n$RESET" $tests_passed $tests
 
 print_h2 "NOTICE"
 printf "This tester does not test for memory leaks.\n"
-printf "Some tests still need to be done manually, particularly for:\n\t* 'ctrl-c', 'ctrl-\\' and 'ctrl-D'.\n"
+printf "Some tests still need to be done manually, particularly for:\n\t* 'ctrl-c',\n\t* 'ctrl-\\',\n\t* 'ctrl-D',\n\t* << (heredoc)\n"
 remove_test_files
 remove_outfiles
 rm -f "./$MINISHELL_NAME"
