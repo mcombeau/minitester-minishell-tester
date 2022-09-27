@@ -199,6 +199,8 @@ function check_output_diff()
 		output_diff_ok=3
 	elif [[ "$@" == *';'* ]] && grep -q "command not found" "$M_ERR" && grep -q "127" "$M_EXT"; then
 		output_diff_ok=4
+	elif [[ "$@" == *'$$'* ]] && grep -q '$$' "$M_OUT" && [ $outfile1_ok -ge 1 ] && [ $outfile2_ok -ge 1 ] && [ $stderr_ok -eq 1 ] && [ $exit_ok -eq 1 ]; then
+		output_diff_ok=5
 	else
 		output_diff_ok=0;
 	fi
@@ -229,6 +231,8 @@ function output_ok_diff()
 		printf ": minishell shows 'not a valid identifier' error whereas Bash no longer does on some systems"
 	elif [ $output_diff_ok -eq 4 ]; then
 		printf ": \";\" implementation not required in minishell"
+	elif [ $output_diff_ok -eq 5 ]; then
+		printf ": \"\$\$\" implementation not required in minishell"
 	fi
 	printf "$RESET\n"
 	printf "$BOLD$YELLOW%s$RESET" "----------------------------------------------------------------"
@@ -529,7 +533,7 @@ function test_exec_basic_no_env()
 
 function test_pipes()
 {
-	print_h3 "PIPE TESTS"
+	print_h3 "PIPELINE"
 	exec_test 'ls -l | wc -l'
 	exec_test "cat $F_IN1 | grep dream"
 	exec_test "cat $F_IN1 | grep dream | cat -e"
@@ -546,9 +550,29 @@ function test_pipes()
 	exec_test 'ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls'
 }
 
+function test_spaces()
+{
+	print_h3 "SPACES"
+	exec_test ''
+	exec_test '						     '
+	exec_test "\t\t\t\t\t\t\t\t\t\t      "
+	exec_test "\t\n\r\v\f                "
+	exec_test "       \t    \t\t\t       "
+	exec_test "ls                        "
+	exec_test "           ls             "
+	exec_test "                        ls"
+	exec_test "ls\t\t\t\t\t\t\t\t\t\t\t\t"
+	exec_test "\t\t\t\t\t\tls\t\t\t\t\t\t"
+	exec_test "\t\t\t\t\t\t\t\t\t\t\t\tls"
+	exec_test "\t\t\t\t            \t\tls"
+	exec_test "      ls         -l     -a"
+	exec_test "\t\tls\t\t\t\t-l\t\t\t\t-a"
+	exec_test "\t    ls\t\t  -l -a\t\t   "
+}
+
 function test_syntax_quotes()
 {
-	print_h3 "BASIC QUOTE HANDLING"
+	print_h3 "QUOTE HANDLING"
 	exec_test 'ec""ho test'
 	exec_test 'ec''ho test'
 	exec_test '""echo test'
@@ -570,6 +594,8 @@ function test_syntax_quotes()
 	exec_test 'echo $""USER'
 	exec_test 'echo $''USER'
 	exec_test 'echo $USER"" '''
+	exec_test "echo \"cat $F_IN1 | cat > $F_OUT1\""
+	exec_test "echo 'cat $F_IN1 | cat > $F_OUT1'"
 	exec_test 'ls ""'
 	exec_test "ls '\""
 	exec_test "ls \"\'"
@@ -579,9 +605,40 @@ function test_syntax_quotes()
 	exec_test 'l"s"'
 }
 
+function test_variable_expansion()
+{
+	print_h3 "VARIABLE EXPANSION"
+	exec_test '$USER'
+	exec_test 'ls $HOME'
+	exec_test 'echo $'
+	exec_test 'echo $$'
+	exec_test 'echo $$$'
+	exec_test 'echo $USER'
+	exec_test 'echo $USE'
+	exec_test 'echo $USE_'
+	exec_test 'echo "$USER"'
+	exec_test "echo '\$USER'"
+	exec_test 'echo "|$USER|"'
+	exec_test "echo '|\$USER|'"
+	exec_test 'echo $USER $USER $USER'
+	exec_test 'echo $USER$USER$USER'
+	exec_test 'echo "$USER $USER $USER"'
+	exec_test 'echo "$USER$USER$USER"'
+	exec_test "echo '\$USER \$USER \$USER'"
+	exec_test "echo '\$USER\$USER\$USER'"
+	exec_test 'echo $USERhello'
+	exec_test 'echo hello$USER'
+	exec_test 'echo "$USERhello"'
+	exec_test 'echo "hello$USER"'
+	exec_test "echo '\$USERhello'"
+	exec_test "echo 'hello\$USER'"
+	exec_test 'export ECHO=echo; $ECHO $ECHO'
+	exec_test 'export L="ls -la"; $L'
+}
+
 function test_syntax_errors()
 {
-	print_h3 "SYNTAX ERROR TEST"
+	print_h3 "SYNTAX ERROR"
 	exec_test '|'
 	exec_test '||'
 	exec_test '|||'
@@ -1025,7 +1082,7 @@ function test_redir_infile()
 	exec_test "<$F_IN1 cat"
 	exec_test "cat < $F_IN1"
 	exec_test "cat <$F_IN1"
-	exec_test "< $F_IN1"
+	exec_test "< $F_IN1; echo \$?"
 	exec_test "< $F_DOES_NOT_EXIST"
 	exec_test "< $F_FORBIDDEN"
 	exec_test 'cat <'
@@ -1055,9 +1112,9 @@ function test_redir_infile()
 function test_redir_outfile_trunc()
 {
 	print_h3 "TRUNC OUTFILE"
-	exec_test "> $F_OUT1"
+	exec_test "> $F_OUT1; echo \$?"
 	remove_outfiles
-	exec_test "> $F_FORBIDDEN"
+	exec_test "> $F_FORBIDDEN; echo \$?"
 	exec_test "echo hello world >"
 	exec_test "echo hello world > $F_OUT1"
 	exec_test "echo abcdefghijk >$F_OUT1"
@@ -1105,9 +1162,9 @@ function test_redir_outfile_trunc()
 function test_redir_outfile_append()
 {
 	print_h3 "APPEND OUTFILE"
-	exec_test ">> $F_OUT1"
+	exec_test ">> $F_OUT1; echo \$?"
 	remove_outfiles
-	exec_test ">> $F_FORBIDDEN"
+	exec_test ">> $F_FORBIDDEN; echo \$?"
 	exec_test "echo hello world >>"
 	exec_test "echo hello world >> $F_OUT1"
 	exec_test "echo abcdefghijk >>$F_OUT1"
@@ -1207,6 +1264,8 @@ function test_exit_status()
 	print_h3 "EXIT_STATUS"
 	exec_test 'echo $?'
 	exec_test 'echo; echo $?'
+	exec_test '$?'
+	exec_test '$? + $?'
 	exec_test '$?; echo $?'
 	exec_test 'fakecmd; echo $?'
 	exec_test "cat < $F_DOES_NOT_EXIST; echo \$?"
@@ -1254,13 +1313,16 @@ test_exec_basic
 test_pipes
 
 print_h2 "PARSING & SYNTAX TESTS"
+#################################### SPACES
+test_spaces
 #################################### QUOTES
 test_syntax_quotes
 #################################### SYNTAX ERRORS
 test_syntax_errors
+#################################### VARIABLE EXPANSION
+test_variable_expansion
 
 print_h2 "BUILTIN TESTS"
-
 #################################### ECHO
 test_builtin_echo
 #################################### ENV
@@ -1276,7 +1338,6 @@ test_builtin_cd
 #################################### EXIT
 test_builtin_exit
 
-
 print_h2 "REDIRECTION TESTS"
 #################################### INFILES
 test_redir_infile
@@ -1290,7 +1351,7 @@ test_redir_all
 print_h2 "EXIT STATUS TESTS"
 #################################### EXIT STATUS
 test_exit_status
-<<SKIP
+
 print_h2 "NO ENVIRONMENT TESTS"
 #################################### BASIC EXEC
 test_exec_basic_no_env
@@ -1308,7 +1369,6 @@ test_builtin_pwd_no_env
 test_builtin_cd_no_env
 #################################### EXIT
 test_builtin_exit_no_env
-SKIP
 
 print_h2 "RESULTS"
 test_num+=1
