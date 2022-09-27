@@ -5,28 +5,18 @@ A simple tester for 42 school project minishell.
 
 This tester compares your Minishell output (file output, standard output, standard error and exit codes) against Bash over 600+ tests:
 
-* Execution tests:
-	* executables with relative paths
-	* executables with absolute paths
-	* piped commands (`|`)
-* Parsing & syntax error tests
-	* quotes (`"` and `'`)
+* Execution tests: executables with relative and absolute paths, piped commands (`|`)
+* Parsing & syntax error tests,
+* Quote handling tests (`"` and `'`)
 * Environment variable expansion tests (`$`)
-* Builtin tests:
-	* `echo`
-	* `env`
-	* `export`
-	* `unset`
-	* `pwd`
-	* `cd`
-	* `exit`
-* Redirection tests (coming soon)
-	* `<`
-	* `>`
-	* `>>`
+* Builtin tests: `echo`, `env`, `export`, `unset`, `pwd`, `cd`, `exit`
+* Redirection tests: `<`, `>`, `>>`
 * Exit status tests (`$?`)
+* Tests with no environment
 
 If the output does not match, the tester displays the differences.
+
+![minitester execution gif](https://github.com/mcombeau/minitester-minishell-tester/blob/main/screenshots/minitester.gif)
 
 However, it does not test for memory leaks or for Norm errors. Some tests must still be performed manually, such as for signals and `ctrl-D` functionality, as well as for the heredoc.
 
@@ -105,10 +95,6 @@ To run the program:
 ```bash
 $ bash minitester.sh
 ```
-
----
-
-Based on solaldunckel's [minishell-tester](https://github.com/solaldunckel/minishell-tester)
 
 ---
 Made by mcombeau: mcombeau@student.42.fr | LinkedIn: [mcombeau](https://www.linkedin.com/in/mia-combeau-86653420b/) | Website: [codequoi.com](https://www.codequoi.com)
