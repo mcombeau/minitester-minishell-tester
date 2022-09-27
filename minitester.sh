@@ -278,6 +278,10 @@ function output_fail()
 		printf "%s STDERR output:$BOLD$GREEN OK \n$RESET" "----------"
 	else
 		printf "%s STDERR output:$BOLD$RED KO \n$RESET" "----------"
+		if [[ "$@" == '.' ]]; then
+			printf "\".\" implementation not required in minishell mandatory part\n"
+			printf "Expected 'command not found' error$RESET\n"
+		fi
 		printf "%s STDERR diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
 		diff --color "$M_ERR" "$B_ERR"
 		rm -f "$M_ERR" "$M_ERR_CMP" "$B_ERR" "$B_ERR_CMP"
@@ -508,8 +512,8 @@ function test_exec_basic()
 function test_exec_basic_no_env()
 {
 	print_h3 "BASIC EXECUTION (no environment)"
-	exec_test_no_env 'ls'
-	exec_test_no_env 'ls -la'
+	exec_test_no_env 'pwd'
+	exec_test_no_env 'echo hello'
 	exec_test_no_env '/usr/bin/ls'
 	exec_test_no_env 'usr/bin/ls'
 	exec_test_no_env './ls'
@@ -900,6 +904,8 @@ function test_builtin_pwd()
 	exec_test 'pwd hello'
 	exec_test 'pwd 123'
 	exec_test 'pwd 1 2 x 3 hello'
+	exec_test 'pwd .'
+	exec_test 'pwd ..'
 	exec_test 'unset PWD; pwd | cat -e'
 	exec_test 'unset OLDPWD; pwd | cat -e'
 	exec_test 'unset PWD OLDPWD; pwd | cat -e'
@@ -950,6 +956,8 @@ function test_builtin_cd()
 	exec_test "cd $F_EXISTING; pwd"
 	exec_test "cd $F_FORBIDDEN"
 	exec_test "cd $F_FORBIDDEN; pwd"
+	exec_test 'cd ../../../../../../../../../../../../../../../../../../../../../../'
+	exec_test 'cd ../../../../../../../../../../../../../../../../../../../../../../; pwd'
 	exec_test 'cd $HOME'
 	exec_test 'cd $HOME; pwd'
 	exec_test 'unset HOME; cd $HOME'
@@ -1358,7 +1366,7 @@ test_exec_basic_no_env
 #################################### ECHO
 test_builtin_echo_no_env
 #################################### ENV
-test_builtin_env_no_env
+#test_builtin_env_no_env
 #################################### EXPORT
 test_builtin_export_no_env
 #################################### UNSET

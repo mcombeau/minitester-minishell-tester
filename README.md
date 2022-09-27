@@ -3,7 +3,7 @@ A simple tester for 42 school project minishell.
 
 ## Tests Performed
 
-This tester compares your Minishell output (file output, standard output, standard error and exit codes) against Bash over 500+ tests:
+This tester compares your Minishell output (file output, standard output, standard error and exit codes) against Bash over 600+ tests:
 
 * Execution tests:
 	* executables with relative paths
