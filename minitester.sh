@@ -199,10 +199,8 @@ function check_output_diff()
 		output_diff_ok=2
 	elif [[ "$@" == *'unset'* ]] && grep -q "not a valid identifier" "$M_ERR"; then
 		output_diff_ok=3
-#	elif [[ "$@" == *';'* ]] && grep -q "command not found" "$M_ERR" && grep -q "127" "$M_EXT"; then
-#		output_diff_ok=4
 	elif [[ "$@" == *'$$'* ]] && grep -q '$$' "$M_OUT" && [ $outfile1_ok -ge 1 ] && [ $outfile2_ok -ge 1 ] && [ $stderr_ok -eq 1 ] && [ $exit_ok -eq 1 ]; then
-		output_diff_ok=5
+		output_diff_ok=4
 	else
 		output_diff_ok=0;
 	fi
@@ -232,8 +230,6 @@ function output_ok_diff()
 	elif [ $output_diff_ok -eq 3 ]; then
 		printf ": minishell shows 'not a valid identifier' error whereas Bash no longer does on some systems"
 	elif [ $output_diff_ok -eq 4 ]; then
-		printf ": \";\" implementation not required in minishell"
-	elif [ $output_diff_ok -eq 5 ]; then
 		printf ": \"\$\$\" implementation not required in minishell"
 	fi
 	printf "$RESET\n"
