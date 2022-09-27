@@ -747,9 +747,9 @@ function test_builtin_echo()
 function test_builtin_echo_no_env()
 {
 	print_h3 "ECHO (no environment)"
-	exec_test_no_env "echo hello world"
-	exec_test_no_env "echo $USER"
-	exec_test_no_env "echo $PATH"
+	exec_test_no_env 'echo hello world'
+	exec_test_no_env 'echo $USER'
+	exec_test_no_env 'echo $PATH'
 }
 
 function test_builtin_env()
