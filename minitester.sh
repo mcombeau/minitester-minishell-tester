@@ -1330,8 +1330,6 @@ test_spaces
 test_syntax_quotes
 #################################### SYNTAX ERRORS
 test_syntax_errors
-#################################### VARIABLE EXPANSION
-test_variable_expansion
 
 print_h2 "BUILTIN TESTS"
 #################################### ECHO
@@ -1348,6 +1346,10 @@ test_builtin_pwd
 test_builtin_cd
 #################################### EXIT
 test_builtin_exit
+
+print_h2 "VARIABLE EXPANSION TESTS"
+#################################### VARIABLE EXPANSION
+test_variable_expansion
 
 print_h2 "REDIRECTION TESTS"
 #################################### INFILES
