@@ -193,12 +193,14 @@ function check_output_diff()
 {
 	if [[ "$@" == '.' ]] && grep -q "command not found" "$M_ERR" && grep -q "127" "$M_EXT"; then
 		output_diff_ok=1
+	elif [[ "$@" == *'; .' ]] && grep -q "directory" "$M_ERR" && (grep -q "126" "$M_EXT" || grep -q "127" "$M_EXT"); then
+		output_diff_ok=1
 	elif [[ "$@" == *'||'* ]] && grep -q "syntax error" "$M_ERR" && grep -q "2" "$M_EXT"; then
 		output_diff_ok=2
 	elif [[ "$@" == *'unset'* ]] && grep -q "not a valid identifier" "$M_ERR"; then
 		output_diff_ok=3
-	elif [[ "$@" == *';'* ]] && grep -q "command not found" "$M_ERR" && grep -q "127" "$M_EXT"; then
-		output_diff_ok=4
+#	elif [[ "$@" == *';'* ]] && grep -q "command not found" "$M_ERR" && grep -q "127" "$M_EXT"; then
+#		output_diff_ok=4
 	elif [[ "$@" == *'$$'* ]] && grep -q '$$' "$M_OUT" && [ $outfile1_ok -ge 1 ] && [ $outfile2_ok -ge 1 ] && [ $stderr_ok -eq 1 ] && [ $exit_ok -eq 1 ]; then
 		output_diff_ok=5
 	else
@@ -281,6 +283,9 @@ function output_fail()
 		if [[ "$@" == '.' ]]; then
 			printf $YELLOW"\".\" implementation not required in minishell\n"
 			printf "Expected 'command not found' error$RESET\n"
+		elif [[ "$@" == *'; .' ]]; then
+			printf $YELLOW"\".\" implementation not required in minishell\n"
+			printf "Expected 'is a directory' or 'no such file or directory' error$RESET\n"
 		fi
 		printf "%s STDERR diff$RED Minishell$RESET vs$GREEN Bash$RESET: \n" ">>>"
 		diff --color "$M_ERR" "$B_ERR"
@@ -512,27 +517,27 @@ function test_exec_basic()
 function test_exec_basic_no_env()
 {
 	print_h3 "BASIC EXECUTION (no environment)"
-	exec_test_no_env 'pwd'
-	exec_test_no_env 'echo hello'
-	exec_test_no_env '/usr/bin/ls'
-	exec_test_no_env 'usr/bin/ls'
-	exec_test_no_env './ls'
-	exec_test_no_env 'hello'
-	exec_test_no_env '/usr/bin/hello'
-	exec_test_no_env './hello'
-	exec_test_no_env '""'
-	exec_test_no_env '.'
-	exec_test_no_env '..'
-	exec_test_no_env '$'
-	exec_test_no_env './'
-	exec_test_no_env '../'
-	exec_test_no_env "./$D_EXISTS"
-	exec_test_no_env '../fake_dir/'
-	exec_test_no_env "./$F_EXISTING"
-	exec_test_no_env './nonexistant_file'
-	exec_test_no_env "./$F_EXECUTABLE"
-	exec_test_no_env ".$F_EXECUTABLE"
-	exec_test_no_env "$F_EXECUTABLE"
+	exec_test_no_env 'unset PATH; pwd'
+	exec_test_no_env 'unset PATH; echo hello'
+	exec_test_no_env 'unset PATH; /usr/bin/ls'
+	exec_test_no_env 'unset PATH; usr/bin/ls'
+	exec_test_no_env 'unset PATH; ./ls'
+	exec_test_no_env 'unset PATH; hello'
+	exec_test_no_env 'unset PATH; /usr/bin/hello'
+	exec_test_no_env 'unset PATH; ./hello'
+	exec_test_no_env 'unset PATH; ""'
+	exec_test_no_env 'unset PATH; .'
+	exec_test_no_env 'unset PATH; ..'
+	exec_test_no_env 'unset PATH; $'
+	exec_test_no_env 'unset PATH; ./'
+	exec_test_no_env 'unset PATH; ../'
+	exec_test_no_env "unset PATH; ./$D_EXISTS"
+	exec_test_no_env 'unset PATH; ../fake_dir/'
+	exec_test_no_env "unset PATH; ./$F_EXISTING"
+	exec_test_no_env 'unset PATH; ./nonexistant_file'
+	exec_test_no_env "unset PATH; ./$F_EXECUTABLE"
+	exec_test_no_env "unset PATH; .$F_EXECUTABLE"
+	exec_test_no_env "unset PATH; $F_EXECUTABLE"
 }
 
 function test_pipes()
@@ -557,7 +562,8 @@ function test_pipes()
 function test_spaces()
 {
 	print_h3 "SPACES"
-	exec_test ''
+	exec_test '""'
+	exec_test '"                        "'
 	exec_test '						     '
 	exec_test "\t\t\t\t\t\t\t\t\t\t      "
 	exec_test "\t\n\r\v\f                "
@@ -747,9 +753,9 @@ function test_builtin_echo()
 function test_builtin_echo_no_env()
 {
 	print_h3 "ECHO (no environment)"
-	exec_test_no_env 'echo hello world'
-	exec_test_no_env 'echo $USER'
-	exec_test_no_env 'echo $PATH'
+	exec_test_no_env 'unset PATH; echo hello world'
+	exec_test_no_env 'unset PATH; echo $USER'
+	exec_test_no_env 'unset PATH; echo $PATH'
 }
 
 function test_builtin_env()
@@ -765,10 +771,10 @@ function test_builtin_env()
 function test_builtin_env_no_env()
 {
 	print_h3 "ENV (no environment)"
-	exec_test_no_env 'env | grep PATH'
-	exec_test_no_env 'env | grep USER'
-	exec_test_no_env 'env | grep SHELL'
-	exec_test_no_env 'env | grep PWD'
+	exec_test_no_env 'unset PATH; env | grep PATH'
+	exec_test_no_env 'unset PATH; env | grep USER'
+	exec_test_no_env 'unset PATH; env | grep SHELL'
+	exec_test_no_env 'unset PATH; env | grep PWD'
 }
 
 function test_builtin_export()
@@ -839,10 +845,10 @@ function test_builtin_export()
 function test_builtin_export_no_env()
 {
 	print_h3 "EXPORT (no environment)"
-	exec_test_no_env 'export hello=42'
-	exec_test_no_env 'export 42=hello'
-	exec_test_no_env 'export hello=42; echo $hello'
-	exec_test_no_env 'export PATH=/usr/bin:/sbin/; ls'
+	exec_test_no_env 'unset PATH; export hello=42'
+	exec_test_no_env 'unset PATH; export 42=hello'
+	exec_test_no_env 'unset PATH; export hello=42; echo $hello'
+	exec_test_no_env 'unset PATH; export PATH=/usr/bin:/sbin/; ls'
 }
 
 function test_builtin_unset()
@@ -888,10 +894,10 @@ function test_builtin_unset()
 function test_builtin_unset_no_env()
 {
 	print_h3 "UNSET (no environment)"
-	exec_test_no_env 'export hello=42; unset hello'
-	exec_test_no_env 'export hello=42; unset hello; echo $hello'
 	exec_test_no_env 'unset PATH'
-	exec_test_no_env 'unset USER'
+	exec_test_no_env 'unset PATH; export hello=42; unset hello'
+	exec_test_no_env 'unset PATH; export hello=42; unset hello; echo $hello'
+	exec_test_no_env 'unset PATH; unset USER'
 }
 
 function test_builtin_pwd()
@@ -919,14 +925,14 @@ function test_builtin_pwd()
 function test_builtin_pwd_no_env()
 {
 	print_h3 "PWD (no environment)"
-	exec_test_no_env 'pwd'
-	exec_test_no_env 'pwd'
-	exec_test_no_env 'unset PWD; pwd'
-	exec_test_no_env 'unset OLDPWD; pwd'
-	exec_test_no_env 'unset PWD OLDPWD; pwd'
-	exec_test_no_env "export PWD='hello/world'"
-	exec_test_no_env "export PWD='/hello/world/'"
-	exec_test_no_env "export PWD='/usr/bin/'"
+	exec_test_no_env 'unset PATH; pwd'
+	exec_test_no_env 'unset PATH; pwd'
+	exec_test_no_env 'unset PATH; unset PWD; pwd'
+	exec_test_no_env 'unset PATH; unset OLDPWD; pwd'
+	exec_test_no_env 'unset PATH; unset PWD OLDPWD; pwd'
+	exec_test_no_env "unset PATH; export PWD='hello/world'"
+	exec_test_no_env "unset PATH; export PWD='/hello/world/'"
+	exec_test_no_env "unset PATH; export PWD='/usr/bin/'"
 }
 
 function test_builtin_cd()
@@ -970,32 +976,32 @@ function test_builtin_cd()
 function test_builtin_cd_no_env()
 {
 	print_h3 "CD (no environment)"
-	exec_test_no_env 'cd'
-	exec_test_no_env 'cd; pwd'
-	exec_test_no_env 'cd .'
-	exec_test_no_env 'cd .; pwd'
-	exec_test_no_env 'cd ..'
-	exec_test_no_env 'cd ..; pwd'
-	exec_test_no_env "cd $D_EXISTS"
-	exec_test_no_env "cd $D_EXISTS; pwd"
-	exec_test_no_env 'cd /dev'
-	exec_test_no_env 'cd /dev; pwd'
-	exec_test_no_env 'cd /Users'
-	exec_test_no_env 'cd /Users; pwd'
-	exec_test_no_env 'cd fake_dir'
-	exec_test_no_env 'cd fake_dir; pwd'
-	exec_test_no_env "cd $D_FORBIDDEN"
-	exec_test_no_env "cd $D_FORBIDDEN; pwd"
-	exec_test_no_env "cd $F_EXISTING"
-	exec_test_no_env "cd $F_EXISTING; pwd"
-	exec_test_no_env "cd $F_FORBIDDEN"
-	exec_test_no_env "cd $F_FORBIDDEN; pwd"
-	exec_test_no_env 'cd $HOME'
-	exec_test_no_env 'cd $HOME; pwd'
-	exec_test_no_env 'unset HOME; cd $HOME'
-	exec_test_no_env 'unset HOME; cd $HOME; pwd'
-	exec_test_no_env 'unset HOME; cd'
-	exec_test_no_env 'unset HOME; cd; pwd'
+	exec_test_no_env 'unset PATH; cd'
+	exec_test_no_env 'unset PATH; cd; pwd'
+	exec_test_no_env 'unset PATH; cd .'
+	exec_test_no_env 'unset PATH; cd .; pwd'
+	exec_test_no_env 'unset PATH; cd ..'
+	exec_test_no_env 'unset PATH; cd ..; pwd'
+	exec_test_no_env "unset PATH; cd $D_EXISTS"
+	exec_test_no_env "unset PATH; cd $D_EXISTS; pwd"
+	exec_test_no_env 'unset PATH; cd /dev'
+	exec_test_no_env 'unset PATH; cd /dev; pwd'
+	exec_test_no_env 'unset PATH; cd /Users'
+	exec_test_no_env 'unset PATH; cd /Users; pwd'
+	exec_test_no_env 'unset PATH; cd fake_dir'
+	exec_test_no_env 'unset PATH; cd fake_dir; pwd'
+	exec_test_no_env "unset PATH; cd $D_FORBIDDEN"
+	exec_test_no_env "unset PATH; cd $D_FORBIDDEN; pwd"
+	exec_test_no_env "unset PATH; cd $F_EXISTING"
+	exec_test_no_env "unset PATH; cd $F_EXISTING; pwd"
+	exec_test_no_env "unset PATH; cd $F_FORBIDDEN"
+	exec_test_no_env "unset PATH; cd $F_FORBIDDEN; pwd"
+	exec_test_no_env 'unset PATH; cd $HOME'
+	exec_test_no_env 'unset PATH; cd $HOME; pwd'
+	exec_test_no_env 'unset PATH; unset HOME; cd $HOME'
+	exec_test_no_env 'unset PATH; unset HOME; cd $HOME; pwd'
+	exec_test_no_env 'unset PATH; unset HOME; cd'
+	exec_test_no_env 'unset PATH; unset HOME; cd; pwd'
 }
 
 function test_builtin_exit()
@@ -1066,21 +1072,21 @@ function test_builtin_exit()
 function test_builtin_exit_no_env()
 {
 	print_h3 "EXIT (no environment)"
-	exec_test_no_env 'exit'
-	exec_test_no_env 'exit 42'
-	exec_test_no_env 'exit 42; echo "Should have exited."'
-	exec_test_no_env 'exit +42'
-	exec_test_no_env 'exit -42'
-	exec_test_no_env 'exit 00000000000000000000000000000000000000000000001'
-	exec_test_no_env 'exit 00000000000000000000000000000000000000000000000'
-	exec_test_no_env 'exit abc'
-	exec_test_no_env 'exit abc; echo "Should have exited."'
-	exec_test_no_env 'exit --42'
-	exec_test_no_env 'exit ++42'
-	exec_test_no_env 'exit - 42'
-	exec_test_no_env 'exit + 42'
-	exec_test_no_env 'exit 9999999999999999999999999999999999999999999999'
-	exec_test_no_env 'exit -9999999999999999999999999999999999999999999999'
+	exec_test_no_env 'unset PATH; exit'
+	exec_test_no_env 'unset PATH; exit 42'
+	exec_test_no_env 'unset PATH; exit 42; echo "Should have exited."'
+	exec_test_no_env 'unset PATH; exit +42'
+	exec_test_no_env 'unset PATH; exit -42'
+	exec_test_no_env 'unset PATH; exit 00000000000000000000000000000000000000000000001'
+	exec_test_no_env 'unset PATH; exit 00000000000000000000000000000000000000000000000'
+	exec_test_no_env 'unset PATH; exit abc'
+	exec_test_no_env 'unset PATH; exit abc; echo "Should have exited."'
+	exec_test_no_env 'unset PATH; exit --42'
+	exec_test_no_env 'unset PATH; exit ++42'
+	exec_test_no_env 'unset PATH; exit - 42'
+	exec_test_no_env 'unset PATH; exit + 42'
+	exec_test_no_env 'unset PATH; exit 9999999999999999999999999999999999999999999999'
+	exec_test_no_env 'unset PATH; exit -9999999999999999999999999999999999999999999999'
 }
 
 function test_redir_infile()
@@ -1317,6 +1323,7 @@ create_test_files
 print_h2 "BASIC EXECUTION TESTS"
 #################################### BASIC EXEC
 test_exec_basic
+
 #################################### PIPES
 test_pipes
 
@@ -1366,7 +1373,7 @@ test_exec_basic_no_env
 #################################### ECHO
 test_builtin_echo_no_env
 #################################### ENV
-#test_builtin_env_no_env
+test_builtin_env_no_env
 #################################### EXPORT
 test_builtin_export_no_env
 #################################### UNSET
