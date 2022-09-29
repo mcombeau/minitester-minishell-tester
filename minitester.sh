@@ -640,6 +640,7 @@ function test_variable_expansion()
 	exec_test "echo 'hello\$USER'"
 	exec_test 'export ECHO=echo; $ECHO $ECHO'
 	exec_test 'export L="ls -la"; $L'
+	exec_test "export L='ls -la'; \$L"
 }
 
 function test_syntax_errors()
@@ -854,7 +855,7 @@ function test_builtin_unset()
 	exec_test 'Unset'
 	exec_test 'unset'
 	exec_test 'unset PATH'
-	exec_test 'unset PATH USER; echo $PATH $USER'
+	exec_test 'unset PATH USER; echo $PATH; echo $USER'
 	exec_test 'unset PATH; echo $PATH'
 	exec_test 'unset PATH; ls'
 	exec_test 'unset NOT_A_VAR'
