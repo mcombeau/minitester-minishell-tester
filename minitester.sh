@@ -854,6 +854,7 @@ function test_builtin_unset()
 	exec_test 'Unset'
 	exec_test 'unset'
 	exec_test 'unset PATH'
+	exec_test 'unset PATH USER; echo $PATH $USER'
 	exec_test 'unset PATH; echo $PATH'
 	exec_test 'unset PATH; ls'
 	exec_test 'unset NOT_A_VAR'
@@ -916,6 +917,7 @@ function test_builtin_pwd()
 	exec_test "export PWD='/usr/bin/'; pwd | cat -e"
 	exec_test "export OLDPWD=abc/def; pwd | cat -e"
 	exec_test "export PWD=hello/world OLDPWD=abc/def; pwd | cat -e"
+	exec_test 'mkdir a a/b; cd a/b; rm -rf ../../a; pwd'
 }
 
 function test_builtin_pwd_no_env()
@@ -926,9 +928,9 @@ function test_builtin_pwd_no_env()
 	exec_test_no_env 'unset PATH; unset PWD; pwd'
 	exec_test_no_env 'unset PATH; unset OLDPWD; pwd'
 	exec_test_no_env 'unset PATH; unset PWD OLDPWD; pwd'
-	exec_test_no_env "unset PATH; export PWD='hello/world'"
-	exec_test_no_env "unset PATH; export PWD='/hello/world/'"
-	exec_test_no_env "unset PATH; export PWD='/usr/bin/'"
+	exec_test_no_env "unset PATH; export PWD='hello/world'; pwd"
+	exec_test_no_env "unset PATH; export PWD='/hello/world/'; pwd"
+	exec_test_no_env "unset PATH; export PWD='/usr/bin/'; pwd"
 }
 
 function test_builtin_cd()
@@ -966,7 +968,8 @@ function test_builtin_cd()
 	exec_test 'unset HOME; cd $HOME; pwd'
 	exec_test 'unset HOME; cd'
 	exec_test 'unset HOME; cd; pwd'
-	exec_test 'mkdir a a/b; cd a/b; rm -rf ../../a; cd .; pwd'
+	exec_test 'mkdir a a/b; cd a/b; rm -rf ../../a; cd ..'
+	exec_test 'mkdir a a/b; cd a/b; rm -rf ../../a; unset PWD OLDPWD; cd ..'
 }
 
 function test_builtin_cd_no_env()
@@ -1319,7 +1322,6 @@ create_test_files
 print_h2 "BASIC EXECUTION TESTS"
 #################################### BASIC EXEC
 test_exec_basic
-
 #################################### PIPES
 test_pipes
 
