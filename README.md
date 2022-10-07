@@ -52,7 +52,7 @@ int	main(int argc, char **argv, char **envp)
 	char	**arg_input;
 	int		i;
 
-	if (argc == 3 && ft_strcmp(argv[1], "-c") != 0 && argv[2])
+	if (argc == 3 && ft_strcmp(argv[1], "-c") == 0 && argv[2])
 	{
 		arg_input = ft_split(argv[2], ';');
 		if (!arg_input)
