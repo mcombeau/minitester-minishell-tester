@@ -779,7 +779,6 @@ function test_builtin_export()
 	print_h3 "EXPORT"
 	exec_test 'EXPORT'
 	exec_test 'Export'
-	exec_test 'export | wc -l'
 	exec_test 'export ""'
 	exec_test 'export 42'
 	exec_test 'export 42; env | grep 42'
@@ -811,12 +810,9 @@ function test_builtin_export()
 	exec_test 'export 1=a'
 	exec_test 'export HELLOWORLD =a'
 	exec_test 'export HELLOWORLD= a'
-	exec_test "export HELLO\'WORLD=a"
 	exec_test "export HELLO\'WORLD\'=a"
-	exec_test "export HELLO\"WORLD=a"
 	exec_test "export HELLO\"WORLD\"=a"
 	exec_test "export HELLO\$WORLD=a"
-	exec_test "export HELLO|WORLD=a"
 	exec_test "export HELLO_WORLD=a"
 	exec_test "export A='hello this world is wonderful'; echo \$A"
 	exec_test "export A=\"hello this world is wonderful\"; echo \$A"
@@ -1354,6 +1350,7 @@ print_h2 "VARIABLE EXPANSION TESTS"
 #################################### VARIABLE EXPANSION
 test_variable_expansion
 
+
 print_h2 "REDIRECTION TESTS"
 #################################### INFILES
 test_redir_infile
@@ -1363,6 +1360,7 @@ test_redir_outfile_trunc
 test_redir_outfile_append
 #################################### FILES
 test_redir_all
+
 
 print_h2 "EXIT STATUS TESTS"
 #################################### EXIT STATUS
