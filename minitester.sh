@@ -638,6 +638,11 @@ function test_variable_expansion()
 	exec_test 'echo "hello$USER"'
 	exec_test "echo '\$USERhello'"
 	exec_test "echo 'hello\$USER'"
+	exec_test 'echo hello $USER'
+	exec_test 'echo hello $NOT_A_VAR $NOT_A_VAR $NOT_A_VAR $USER'
+	exec_test 'echo $NOT_A_VAR $NOT_A_VAR $NOT_A_VAR $USER'
+	exec_test 'echo hello $NOT_A_VAR $NOT_A_VAR $NOT_A_VAR'
+	exec_test 'echo "hello $NOT_A_VAR $NOT_A_VAR $NOT_A_VAR $USER"'
 	exec_test 'export ECHO=echo; $ECHO $ECHO'
 	exec_test 'export L="ls -la"; $L'
 	exec_test "export L='ls -la'; \$L"
