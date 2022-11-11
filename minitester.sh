@@ -195,7 +195,7 @@ function check_output_diff()
 		output_diff_ok=1
 	elif [[ "$@" == *'; .' ]] && grep -q "directory" "$M_ERR" && (grep -q "126" "$M_EXT" || grep -q "127" "$M_EXT"); then
 		output_diff_ok=1
-	elif [[ "$@" == *'||'* ]] && grep -q "syntax error" "$M_ERR" && grep -q "2" "$M_EXT"; then
+	elif [[ "$@" == *'||'* ]] && grep -q "syntax error" "$M_ERR" && (grep -q "2" "$M_EXT" || grep -q "1" "$M_EXT"); then
 		output_diff_ok=2
 	elif [[ "$@" == *'unset'* ]] && grep -q "not a valid identifier" "$M_ERR"; then
 		output_diff_ok=3
@@ -1396,7 +1396,7 @@ printf $BOLD$GREEN"\t%d$RED\t\t%d$RESET$BOLD\t\t%d\n$RESET" $tests_passed $tests
 
 print_h2 "NOTICE"
 printf "This tester does not test for memory leaks.\n"
-printf "Some tests still need to be done manually, particularly for:\n\t* 'ctrl-c',\n\t* 'ctrl-\\',\n\t* 'ctrl-D',\n\t* << (heredoc)\n"
+printf "Some tests still need to be done manually, particularly for:\n\t* 'ctrl-c',\n\t* 'ctrl-\',\n\t* 'ctrl-D',\n\t* << (heredoc)\n"
 remove_test_files
 remove_outfiles
 rm -f "./$MINISHELL_NAME"
