@@ -162,6 +162,8 @@ function check_stdout()
 {
 	if cmp -s "$M_OUT" "$B_OUT"; then
 		stdout_ok=1
+	elif grep -q "goinfre" "$M_OUT" && grep -q "goinfre" "$B_OUT"; then
+		stdout_ok=1
 	else
 		stdout_ok=0
 	fi
