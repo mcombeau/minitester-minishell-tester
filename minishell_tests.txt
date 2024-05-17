@@ -1,0 +1,711 @@
+-- BASIC EXECUTION --
+ls
+ls -la
+/usr/bin/ls
+usr/bin/ls
+./ls
+hello
+/usr/bin/hello
+./hello
+""
+.
+..
+$
+./
+../
+./$D_EXISTS
+../fake_dir/
+./$F_EXISTING
+./nonexistant_file
+./$F_EXECUTABLE
+.$F_EXECUTABLE
+$F_EXECUTABLE
+
+-- BASIC EXECUTION (no environment) --
+unset PATH; pwd
+unset PATH; echo hello
+unset PATH; /usr/bin/ls
+unset PATH; usr/bin/ls
+unset PATH; ./ls
+unset PATH; hello
+unset PATH; /usr/bin/hello
+unset PATH; ./hello
+unset PATH; ""
+unset PATH; .
+unset PATH; ..
+unset PATH; $
+unset PATH; ./
+unset PATH; ../
+unset PATH; ./$D_EXISTS
+unset PATH; ../fake_dir/
+unset PATH; ./$F_EXISTING
+unset PATH; ./nonexistant_file
+unset PATH; ./$F_EXECUTABLE
+unset PATH; .$F_EXECUTABLE
+unset PATH; $F_EXECUTABLE
+
+-- SPACES --
+""
+"                        "
+						     
+\t\t\t\t\t\t\t\t\t\t      
+\t\n\r\v\f                
+       \t    \t\t\t       
+ls                        
+           ls             
+                        ls
+ls\t\t\t\t\t\t\t\t\t\t\t\t
+\t\t\t\t\t\tls\t\t\t\t\t\t
+\t\t\t\t\t\t\t\t\t\t\t\tls
+\t\t\t\t            \t\tls
+      ls         -l     -a
+\t\tls\t\t\t\t-l\t\t\t\t-a
+\t    ls\t\t  -l -a\t\t   
+-- PIPELINE --
+ls -l | wc -l
+cat $F_IN1 | grep dream
+cat $F_IN1 | grep dream | cat -e
+cat $F_IN1 | grep dream | wc -l
+cat $F_IN1 | grep dream | wc -l | cd x
+cat $F_IN1 | grep dream | wc -l | x
+x | cat $F_IN1 | grep dream | wc -l
+cat $F_IN1 | x | grep dream | wc -l
+cat $F_IN1 | grep dream | x | wc -l
+cat /dev/random | head -c 100 | wc -c
+x | x | x | x | x
+x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x
+ls | ls | ls
+ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls
+
+
+-- QUOTE HANDLING --
+ec""ho test
+ec''ho test
+""echo test
+''echo test
+echo"" test
+echo'' test
+echo "" test
+echo '' test
+echo "" "" "" test
+echo '' '' '' test
+echo """""" test
+echo '''''' test
+echo $USE""R
+echo $USE''R
+echo ""$USER
+echo ''$USER
+echo "$"USER
+echo '$'USER
+echo $""USER
+echo $''USER
+echo $USER"" ''
+echo \"cat $F_IN1 | cat > $F_OUT1\"
+echo 'cat $F_IN1 | cat > $F_OUT1'
+ls ""
+ls '\"
+ls \"\'
+ls " "
+ls \" ' \"
+"ls"
+l"s"
+
+-- VARIABLE EXPANSION --
+$USER
+ls $HOME
+echo $
+echo $$
+echo $$$
+echo $USER
+echo $USE
+echo $USE_
+echo "$USER"
+echo '\$USER'
+echo "|$USER|"
+echo '|\$USER|'
+echo $USER $USER $USER
+echo $USER$USER$USER
+echo "$USER $USER $USER"
+echo "$USER$USER$USER"
+echo '\$USER \$USER \$USER'
+echo '\$USER\$USER\$USER'
+echo $USERhello
+echo hello$USER
+echo "$USERhello"
+echo "hello$USER"
+echo '\$USERhello'
+echo 'hello\$USER'
+echo hello $USER
+echo hello $NOT_A_VAR $NOT_A_VAR $NOT_A_VAR $USER
+echo $NOT_A_VAR $NOT_A_VAR $NOT_A_VAR $USER
+echo hello $NOT_A_VAR $NOT_A_VAR $NOT_A_VAR
+echo "hello $NOT_A_VAR $NOT_A_VAR $NOT_A_VAR $USER"
+export ECHO=echo; $ECHO $ECHO
+export L="ls -la"; $L
+export L='ls -la'; \$L
+
+-- SYNTAX ERROR --
+|
+||
+|||
+<
+<<
+<<<<<<
+>
+>>
+>>>
+>>>>>>
+ls |
+ls ||
+ls | |
+| ls
+| ls | cat
+ls | cat |
+ls || cat
+ls | | cat
+fake_cmd |
+| fake_cmd
+fake_cmd || ls
+fake_cmd | | ls
+ls || fake_cmd
+ls | | fake_cmd
+ls >>
+ls >
+ls <
+ls <<
+ls < |
+ls << |
+ls > |
+ls >> |
+ls | <
+ls | <<
+ls | >
+ls | >>
+ls > >
+ls > >>
+ls > <
+ls > <<
+ls >> >
+ls >> >>
+ls >> <
+ls >> <<
+ls < >
+ls < >>
+ls < <
+ls < <<
+ls << >
+ls << >>
+ls << <
+ls << <<
+ls > >> |
+< < $F_IN1 cat
+<< << $F_IN1 cat
+<< < $F_IN1 cat
+< << $F_IN1 cat
+< $FAKE_VAR cat
+cat < $FAKE_VAR
+cat < $123456
+< $USER cat
+echo hello | ;
+ls > <
+
+-- ECHO --
+ECHO
+Echo
+echo
+echo hello
+echo hello
+echo hello world
+echo hello      world
+echo                      hello world
+echo hello world                
+echo helololollllolllolol loollolllololllol lllol  looololololollllloooolll
+echo helololollllolllolol                                 loollolllololllol                   lllol                looololololollllloooolll
+echo -n
+echo -n hello world
+echo hello      world
+echo                      hello world
+echo -n hello world                
+echo -n helololollllolllolol loollolllololllol lllol  looololololollllloooolll
+echo -n helololollllolllolol                                 loollolllololllol                   lllol                looololololollllloooolll
+echo hello -n
+             echo                 hello                world
+             echo             -n                  hello               world                       
+echo a '' b '' c '' d
+echo a "" b "" c "" d
+echo -n a '' b '' c '' d
+echo -n a "" b "" c "" d
+echo -nhello world
+echo -n -n -n hello world
+echo -n -n -nnnn -nnnnm
+echo a	-nnnnhello
+echo -n -nnn hello -n
+echo a	hello -nhello
+
+-- ECHO (no environment) --
+unset PATH; echo hello world
+unset PATH; echo $USER
+unset PATH; echo $PATH
+
+-- ENV --
+ENV | sort | grep -v SHLVL | grep -v _=
+Env | sort | grep -v SHLVL | grep -v _=
+env | sort | grep -v SHLVL | grep -v _=
+env | wc -l
+env | grep PATH
+
+-- ENV (no environment) --
+unset PATH; env | grep PATH
+unset PATH; env | grep USER
+unset PATH; env | grep SHELL
+unset PATH; env | grep PWD
+
+-- EXPORT --
+EXPORT
+Export
+export ""
+export 42
+export 42; env | grep 42
+export =
+export =; env | grep = | wc -l
+export A
+export A=; echo $A
+export A=a; echo $A
+export A=a B=b C=c; echo $A$B$C
+export A=a B=b C=c; export A=c B=a C=b; echo $A$B$C
+export A=a B=b C=c D=d E=e F=f G=g H=h I=i J=j K=k L=l M=m N=n O=o P=p Q=q R=r S=s T=t U=u V=v W=w X=x Y=y Z=z; echo $A$B$C$D$E$F$G$H$I$J$K$L$M$N$O$P$Q$R$S$T$U$V$W$X$Y$Z
+export A==a; echo $A
+export A===a; echo $A
+export A====a; echo $A
+export A=====a; echo $A
+export A======a; echo $A
+export A=a=a=a=a=a; echo $A
+export HELLOWORLD=a; echo $HELLOWORLD
+export helloworld=a; echo $helloworld
+export hello_world=a; echo $hello_world
+export HELLOWORLD1=a; echo $HELLOWORLD1
+export H1ELL_0_W123Orld_a=a; echo $H1ELL_0_W123Orld_a
+export a0123456789=a; echo $a0123456789
+export abcdefghijklmnopqrstuvwxyz=a; echo $abcdefghijklmnopqrstuvwxyz
+export __________________________=a; echo $__________________________
+export _hello_=a; echo $_hello_
+export 1
+export 1=
+export 1=a
+export HELLOWORLD =a
+export HELLOWORLD= a
+export HELLO\'WORLD\'=a
+export HELLO\"WORLD\"=a
+export HELLO\$WORLD=a
+export HELLO_WORLD=a
+export A='hello this world is wonderful'; echo \$A
+export A=\"hello this world is wonderful\"; echo \$A
+export A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo \$A\$B\$C
+export 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo \$A\$B\$C
+export A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf '; echo \$A\$B\$C
+export A B C; echo \$A\$B\$C
+export 'HELLO@'=hello
+export \"HELLO'\"=hello
+export 'HELLO\"'=hello
+export 'HELLO$'=hello
+export 'HELLO!'=hello
+export 'HELLO|'=hello
+export 'HELLO&'=hello
+export 'HELLO\\'=hello
+export ALPHA="abc def ghi"; echo $ALPHA
+export ALPHA='abc def ghi'; echo \$ALPHA
+export DIGITS="0 1 2 3 4 5 6 7 8 9"; echo $DIGITS
+export DIGITS='0 1 2 3 4 5 6 7 8 9'; echo \$DIGITS
+export DIGITS=0 1 2 3 4 5 6 7 8 9; echo $DIGITS
+
+-- EXPORT (no environment) --
+unset PATH; export hello=42
+unset PATH; export 42=hello
+unset PATH; export hello=42; echo $hello
+unset PATH; export PATH=/usr/bin:/sbin/; ls
+
+-- UNSET --
+UNSET
+Unset
+unset
+unset PATH
+unset PATH USER; echo $PATH; echo $USER
+unset PATH; echo $PATH
+unset PATH; ls
+unset NOT_A_VAR
+unset ""
+unset ''
+export A=a; unset A; echo $A
+export A=a A2=a; unset A; echo $A $A2
+export A=a; unset 'A '; echo \$A
+export A=a; unset A=; echo \$A
+export A=a; unset 'A='; echo \$A
+export A=a B=b C=c; unset A B C; echo $A$B$C
+export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C
+export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo \$A\$B\$C
+export A=a B=b C=c; unset 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C
+export A=a B=b C=c; unset 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo \$A\$B\$C
+export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf '
+export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf '; echo \$A\$B\$C
+export A=a B=b C=c; unset A
+export A=a B=b C=c; unset A; echo $A$B$C
+export A=a B=b C=c; unset B
+export A=a B=b C=c; unset B; echo $A$B$C
+export A=a B=b C=c; unset C
+export A=a B=b C=c; unset C; echo $A$B$C
+unset 'HELLO@'
+unset \"HELLO'\"
+unset 'HELLO\"'
+unset 'HELLO$'
+unset 'HELLO!'
+unset 'HELLO|'
+unset 'HELLO&'
+unset 'HELLO\\'
+
+-- UNSET (no environment) --
+unset PATH
+unset PATH; export hello=42; unset hello
+unset PATH; export hello=42; unset hello; echo $hello
+unset PATH; unset USER
+
+-- PWD --
+PWD
+Pwd
+pwd
+pwd | cat -e
+pwd hello
+pwd 123
+pwd 1 2 x 3 hello
+pwd .
+pwd ..
+unset PWD; pwd | cat -e
+unset OLDPWD; pwd | cat -e
+unset PWD OLDPWD; pwd | cat -e
+export PWD='hello/world'; pwd | cat -e
+export PWD='/hello/world/'; pwd | cat -e
+export PWD='/usr/bin/'; pwd | cat -e
+export OLDPWD=abc/def; pwd | cat -e
+export PWD=hello/world OLDPWD=abc/def; pwd | cat -e
+mkdir a a/b; cd a/b; rm -rf ../../a; pwd
+
+-- PWD (no environment) --
+unset PATH; pwd
+unset PATH; pwd
+unset PATH; unset PWD; pwd
+unset PATH; unset OLDPWD; pwd
+unset PATH; unset PWD OLDPWD; pwd
+unset PATH; export PWD='hello/world'; pwd
+unset PATH; export PWD='/hello/world/'; pwd
+unset PATH; export PWD='/usr/bin/'; pwd
+
+-- CD --
+CD
+CD; pwd
+Cd
+Cd; pwd
+cd
+cd; pwd
+cd .
+cd .; pwd
+cd ..
+cd ..; pwd
+cd $D_EXISTS
+cd $D_EXISTS; pwd
+cd /dev
+cd /dev; pwd
+cd /Users
+cd /Users; pwd
+cd fake_dir
+cd fake_dir; pwd
+cd $D_FORBIDDEN
+cd $D_FORBIDDEN; pwd
+cd $F_EXISTING
+cd $F_EXISTING; pwd
+cd $F_FORBIDDEN
+cd $F_FORBIDDEN; pwd
+cd ../../../../../../../../../../../../../../../../../../../../../../
+cd ../../../../../../../../../../../../../../../../../../../../../../; pwd
+cd $HOME
+cd $HOME; pwd
+unset HOME; cd $HOME
+unset HOME; cd $HOME; pwd
+unset HOME; cd
+unset HOME; cd; pwd
+mkdir a a/b; cd a/b; rm -rf ../../a; cd ..
+mkdir a a/b; cd a/b; rm -rf ../../a; unset PWD OLDPWD; cd ..
+
+-- CD (no environment) --
+unset PATH; cd
+unset PATH; cd; pwd
+unset PATH; cd .
+unset PATH; cd .; pwd
+unset PATH; cd ..
+unset PATH; cd ..; pwd
+unset PATH; cd $D_EXISTS
+unset PATH; cd $D_EXISTS; pwd
+unset PATH; cd /dev
+unset PATH; cd /dev; pwd
+unset PATH; cd /Users
+unset PATH; cd /Users; pwd
+unset PATH; cd fake_dir
+unset PATH; cd fake_dir; pwd
+unset PATH; cd $D_FORBIDDEN
+unset PATH; cd $D_FORBIDDEN; pwd
+unset PATH; cd $F_EXISTING
+unset PATH; cd $F_EXISTING; pwd
+unset PATH; cd $F_FORBIDDEN
+unset PATH; cd $F_FORBIDDEN; pwd
+unset PATH; cd $HOME
+unset PATH; cd $HOME; pwd
+unset PATH; unset HOME; cd $HOME
+unset PATH; unset HOME; cd $HOME; pwd
+unset PATH; unset HOME; cd
+unset PATH; unset HOME; cd; pwd
+
+-- EXIT --
+exit
+Exit
+EXIT
+exit 42
+exit 42; echo "Should have exited."
+exit 240
+exit +42
+exit -42
+exit 00000000000000000000000000000000000000000000001
+exit 00000000000000000000000000000000000000000000000
+exit -00000000000000000000000000000000000000000000001
+exit -00000000000000000000000000000000000000000000000
+exit abc
+exit abc; echo "Should have exited."
+exit --42
+exit ++42
+exit - 42
+exit + 42
+exit "0"
+exit '0'
+exit ""
+exit ''
+exit " "
+exit ' '
+exit ' 5'
+exit '\t5'
+exit '\t\f\r5'
+exit '5 '
+exit '5\t'
+exit '5\t\f\r'
+exit '5     x'
+exit '5\t\t\tx'
+exit 42 41
+exit 42 abc
+exit abc 42
+exit 2147483647
+exit 2147483648
+exit -2147483648
+exit -2147483649
+exit 9223372036854775807
+exit -9223372036854775808
+exit 9223372036854775808
+exit -9223372036854775810
+exit 9999999999999999999999999999999999999999999999
+exit -9999999999999999999999999999999999999999999999
+exit _0
+exit 0_
+exit 5 < $F_IN1
+exit 1 | exit 0
+exit 0 | exit 1
+ls | exit
+ls | exit 42
+ls | exit 12 abc
+ls | exit abc 12
+exit | ls
+exit 42 | ls
+exit 12 abc | ls
+exit abc 12 | ls
+"ls > file | exit
+"ls -l > x | exit | wc -l
+
+-- EXIT (no environment) --
+unset PATH; exit
+unset PATH; exit 42
+unset PATH; exit 42; echo "Should have exited."
+unset PATH; exit +42
+unset PATH; exit -42
+unset PATH; exit 00000000000000000000000000000000000000000000001
+unset PATH; exit 00000000000000000000000000000000000000000000000
+unset PATH; exit abc
+unset PATH; exit abc; echo "Should have exited."
+unset PATH; exit --42
+unset PATH; exit ++42
+unset PATH; exit - 42
+unset PATH; exit + 42
+unset PATH; exit 9999999999999999999999999999999999999999999999
+unset PATH; exit -9999999999999999999999999999999999999999999999
+
+-- INFILE --
+< $F_IN1 cat
+<$F_IN1 cat
+cat < $F_IN1
+cat <$F_IN1
+< $F_IN1; echo \$?
+< $F_DOES_NOT_EXIST
+< $F_FORBIDDEN
+cat <
+cat < $F_DOES_NOT_EXIST
+cat < $F_DOES_NOT_EXIST
+< $F_DOES_NOT_EXIST cat
+<$F_DOES_NOT_EXIST cat
+cat < $F_FORBIDDEN
+cat <$F_FORBIDDEN
+< $F_FORBIDDEN cat
+<$F_FORBIDDEN cat
+< $F_DOES_NOT_EXIST < $F_IN1 cat
+cat < $F_IN1 < $F_DOES_NOT_EXIST
+cat < $F_IN1 < $F_IN1 < $F_IN1
+cat < $F_IN1 <
+cat < $F_IN1 < $F_IN2
+<$F_IN1 cat < $F_IN2
+cat << < $F_IN1
+cat << << $F_IN1
+cat <<<< $F_IN1
+cat < $F_FORBIDDEN < $F_IN1
+cat < $F_IN1 < $F_FORBIDDEN
+cat < $F_FORBIDDEN | cat < $F_IN1
+cat < $F_IN1 | cat < $F_FORBIDDEN
+
+-- TRUNC OUTFILE --
+> $F_OUT1; echo \$?
+> $F_FORBIDDEN; echo \$?
+echo hello world >
+echo hello world > $F_OUT1
+echo abcdefghijk >$F_OUT1
+echo hello world> $F_OUT1
+> $F_OUT1 echo abcdefghijk
+>$F_OUT1 echo hello world
+echo hello world > $F_FORBIDDEN
+> $F_OUT1 echo hi | echo bye
+echo ab | echo cde > $F_OUT1
+cat $F_IN1 > $F_OUT1
+cat $F_IN1 | wc -l > $F_OUT1
+cat $F_IN1 | grep dream | sed s/e/../g | sed s/d/X/g > $F_OUT1
+echo abcdefghijk > $F_OUT1 > $F_OUT2
+echo hello world > $F_OUT1 > $F_OUT1
+echo hello world > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1
+echo hello world > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT2
+echo abcdefghijk > $F_FORBIDDEN > $F_OUT1 > $F_OUT2
+echo abcdefghijk > $F_OUT1 > $F_FORBIDDEN > $F_OUT2
+echo abcdefghijk > $F_OUT1 > $F_OUT2 > $F_FORBIDDEN
+echo > $F_OUT1 a b c d e
+echo a > $F_OUT1 b c d e
+echo a b > $F_OUT1 c d e
+echo a b c > $F_OUT1 d e
+echo a b c d > $F_OUT1 e
+echo a b c d e > $F_OUT1
+echo > $F_OUT1 a b c d e > $F_OUT2
+echo a > $F_OUT1 b c d e > $F_OUT2
+echo a b > $F_OUT1 c d e > $F_OUT2
+echo a b c > $F_OUT1 d e > $F_OUT2
+echo a b c d > $F_OUT1 e > $F_OUT2
+echo a b c d e > $F_OUT1 > $F_OUT2
+echo hello > $F_OUT1 | echo world > $F_OUT1
+echo 01234 > $F_OUT1 | echo 56789 > $F_OUT2
+echo hello > $F_OUT1 | echo world > $F_FORBIDDEN
+echo 01234 > $F_FORBIDDEN | echo 56789 > $F_OUT1
+
+-- APPEND OUTFILE --
+>> $F_OUT1; echo \$?
+>> $F_FORBIDDEN; echo \$?
+echo hello world >>
+echo hello world >> $F_OUT1
+echo abcdefghijk >>$F_OUT1
+echo hello world>> $F_OUT1
+>> $F_OUT1 echo abcdefghijk
+>>$F_OUT1 echo hello world
+echo hello world >> $F_FORBIDDEN
+>> $F_OUT1 echo hi | echo bye
+echo ab | echo cde >> $F_OUT1
+cat $F_IN1 >> $F_OUT1
+cat $F_IN1 | wc -l >> $F_OUT1
+cat $F_IN1 | grep dream | sed s/e/../g | sed s/d/X/g >> $F_OUT1
+echo abcdefghijk >> $F_OUT1 >> $F_OUT2
+echo hello world >> $F_OUT1 >> $F_OUT1
+echo hello world >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1
+echo hello world >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT2
+echo abcdefghijk >> $F_FORBIDDEN >> $F_OUT1 >> $F_OUT2
+echo abcdefghijk >> $F_OUT1 >> $F_FORBIDDEN >> $F_OUT2
+echo abcdefghijk >> $F_OUT1 >> $F_OUT2 >> $F_FORBIDDEN
+echo >> $F_OUT1 a b c d e
+echo a >> $F_OUT1 b c d e
+echo a b >> $F_OUT1 c d e
+echo a b c >> $F_OUT1 d e
+echo a b c d >> $F_OUT1 e
+echo a b c d e >> $F_OUT1
+echo >> $F_OUT1 a b c d e >> $F_OUT2
+echo a >> $F_OUT1 b c d e >> $F_OUT2
+echo a b >> $F_OUT1 c d e >> $F_OUT2
+echo a b c >> $F_OUT1 d e >> $F_OUT2
+echo a b c d >> $F_OUT1 e >> $F_OUT2
+echo a b c d e >> $F_OUT1 >> $F_OUT2
+echo hello >> $F_OUT1 | echo world >> $F_OUT1
+echo 01234 >> $F_OUT1 | echo 56789 >> $F_OUT2
+echo hello >> $F_OUT1 | echo world >> $F_FORBIDDEN
+echo 01234 >> $F_FORBIDDEN | echo 56789 >> $F_OUT1
+
+-- COMBINATION INFILE/OUTFILE --
+< >> >
+< > >>
+> < >>
+> >> <
+>> > <
+>> < >
+echo ABC > $F_OUT1 | echo DEF >> $F_OUT2
+echo GHI >> $F_OUT1 | echo KLM > $F_OUT2
+echo OPQ > $F_OUT1 >> $F_OUT2
+echo RST >> $F_OUT1 > $F_OUT2
+< $F_IN1 cat | echo UVW > $F_OUT1 | echo XYZ >> $F_OUT2
+< $F_IN1 cat > $F_OUT1 | echo ABC >> $F_OUT1 | echo DEF > $F_OUT2
+cat < $F_OUT1 >
+cat < $F_OUT1 >>
+cat < > $F_OUT1
+cat < >> $F_OUT1
+cat > >> $F_OUT1
+cat >> > $F_OUT1
+< $F_OUT1 cat > $F_OUT1
+< $F_OUT1 cat >> $F_OUT1
+cat > $F_OUT1 < $F_OUT1
+cat >> $F_OUT1 < $F_OUT1
+cat < $F_OUT1 > $F_OUT1
+cat < $F_OUT1 >> $F_OUT1
+< $F_IN1 < $F_IN2 cat > $F_OUT1 >> $F_OUT2
+< $F_IN1 < $F_IN2 cat >> $F_OUT1 > $F_OUT2
+< $F_FORBIDDEN < $F_IN2 cat > $F_OUT1 >> $F_OUT2
+< $F_IN1 < $F_FORBIDDEN cat > $F_OUT1 >> $F_OUT2
+< $F_IN1 < $F_IN2 cat > $F_FORBIDDEN >> $F_OUT1
+< $F_IN2 < $F_IN1 cat > $F_OUT1 >> $F_FORBIDDEN
+< $F_IN1 < $F_IN2 cat >> $F_FORBIDDEN > $F_OUT1
+< $F_IN2 < $F_IN1 cat >> $F_OUT1 > $F_FORBIDDEN
+< $F_FORBIDDEN cat > $F_FORBIDDEN >> $F_FORBIDDEN
+< $F_FORBIDDEN cat >> $F_FORBIDDEN > $F_FORBIDDEN
+cat >> $F_FORBIDDEN > $F_FORBIDDEN < $F_FORBIDDEN
+< $F_IN1 cat | grep dream > $F_FORBIDDEN
+< $F_IN2 cat | grep dream >> $F_FORBIDDEN
+< $F_IN1 cat >> $F_FORBIDDEN | wc -l > $F_OUT1
+< $F_IN2 cat > $F_FORBIDDEN | wc -l >> $F_OUT1
+< $F_IN1 cat >> $F_OUT1 | wc -l > $F_FORBIDDEN
+< $F_IN2 cat > $F_OUT1 | wc -l >> $F_FORBIDDEN
+
+-- EXIT_STATUS --
+echo $?
+echo; echo $?
+$?
+$? + $?
+$?; echo $?
+fakecmd; echo $?
+cat < $F_DOES_NOT_EXIST; echo \$?
+cat < $F_FORBIDDEN; echo \$?
+./$F_FORBIDDEN; echo \$?
+cd $D_EXISTS; echo \$?
+cd $D_FORBIDDEN; echo \$?
+cd dir_does_not_exist; echo \$?
+cd $F_DOES_NOT_EXIST; echo \$?
+cd $F_IN1; echo \$?
+ls dir_does_not_exist; echo \$?
