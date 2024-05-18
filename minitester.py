@@ -85,9 +85,13 @@ def strip_invisible_chars(text):
 
 
 def stdout_ok(bash_stdout, mini_stdout):
-    bash_stdout = strip_invisible_chars(bash_stdout)
-    mini_stdout = strip_invisible_chars(mini_stdout)
-    if bash_stdout != mini_stdout:
+    bash_stdout = strip_invisible_chars(bash_stdout).rstrip("\n")
+    mini_stdout = strip_invisible_chars(mini_stdout).rstrip("\n")
+
+    normalized_bash_stdout = bash_stdout.replace(bash_dir, "[TEST_DIR]")
+    normalized_mini_stdout = mini_stdout.replace(mini_dir, "[TEST_DIR]")
+
+    if normalized_bash_stdout != normalized_mini_stdout:
         print_formatted("stdout", "KO")
         print(f"--> Bash stdout:\n{bash_stdout}")
         print(f"--> Minishell stdout:\n{mini_stdout}")
