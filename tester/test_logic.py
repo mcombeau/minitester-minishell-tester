@@ -9,9 +9,7 @@ from .utils import (
     print_test_header,
 )
 from .config import (
-    test_count,
-    test_fail_count,
-    test_pass_count,
+    globals,
     bash_path,
     minishell_path,
     test_files,
@@ -135,13 +133,10 @@ def output_files_ok():
 
 
 def test_command(command, no_env=False):
-    global test_count
-    global test_fail_count
-    global test_pass_count
-    test_count += 1
+    globals["test_count"] += 1
     expected_passed = 3
 
-    print_test_header(test_count, command)
+    print_test_header(globals["test_count"], command)
 
     bash_stdout, bash_stderr, bash_returncode = run_command(
         command, bash_path, bash_dir, no_env=no_env
@@ -160,9 +155,9 @@ def test_command(command, no_env=False):
         passed += output_files_ok()
 
     if passed == expected_passed:
-        test_pass_count += 1
+        globals["test_pass_count"] += 1
     else:
-        test_fail_count += 1
+        globals["test_fail_count"] += 1
 
 
 def run_tests(selected_blocks, test_blocks):

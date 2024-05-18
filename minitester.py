@@ -7,7 +7,7 @@ from tester import (
     get_args,
     parse_test_file,
 )
-from tester.config import config
+from tester.config import globals
 
 
 def main():
@@ -24,7 +24,7 @@ def main():
         return
 
     if args.color:
-        config["colored_output"] = True
+        globals["colored_output"] = True
 
     selected_blocks = args.testblock if args.testblock else test_blocks.keys()
 

@@ -17,8 +17,10 @@ test_files = [
     "existing_file",
 ]
 
-test_count = 0
-test_fail_count = 0
-test_pass_count = 0
 
-config = {"colored_output": False}
+globals = {
+    "colored_output": False,
+    "test_count": 0,
+    "test_fail_count": 0,
+    "test_pass_count": 0,
+}

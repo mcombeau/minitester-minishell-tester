@@ -1,7 +1,7 @@
 import os
 import re
 from enum import Enum
-from .config import test_count, test_fail_count, test_pass_count, config
+from .config import globals
 
 
 class Color(Enum):
@@ -26,7 +26,7 @@ def strip_invisible_chars(text):
 
 
 def print_formatted(label, status, width=40):
-    if config["colored_output"] == True:
+    if globals["colored_output"] == True:
         color_code = Color.GREEN.value if status == "OK" else Color.RED.value
         reset_code = Color.RESET.value
         print(f"{label.ljust(width, '.')} {color_code}{status}{reset_code}")
@@ -38,7 +38,10 @@ def print_total():
     print()
     print("-" * 40)
     print("\n\nRESULTS")
-    print(f"Total: {test_count}; Fail: {test_fail_count}; Pass: {test_pass_count}")
+    print(
+        f"Total: {globals['test_count']}; Fail: {globals['test_fail_count']}; Pass: {globals['test_pass_count']}"
+    )
+
     print("\n\nNOTICE")
     print("This tester does not test for memory leaks.")
     print(
@@ -55,7 +58,7 @@ def print_test_block_options(test_blocks):
 def print_test_header(test_count, command):
     print()
     print(f"[{test_count:03}]" + "-" * 40)
-    if config["colored_output"]:
+    if globals["colored_output"]:
         print(f"command: {Color.CYAN.value}{command}{Color.RESET.value}")
     else:
         print(f"command: {command}")
