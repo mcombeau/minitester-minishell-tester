@@ -70,9 +70,10 @@ def print_total():
     )
 
 
-def run_command(command, shell_path, working_dir=None):
+def run_command(command, shell_path, working_dir=None, no_env=False):
+    env = {} if no_env else None
     result = subprocess.run(
-        [shell_path, "-c", command], cwd=working_dir, capture_output=True
+        [shell_path, "-c", command], cwd=working_dir, capture_output=True, env=env
     )
     stdout = result.stdout.decode("utf-8", errors="ignore")
     stderr = result.stderr.decode("utf-8", errors="ignore")
@@ -185,7 +186,7 @@ def output_files_ok():
     return all_files_ok
 
 
-def test_command(command):
+def test_command(command, no_env=False):
     global test_count
     global test_fail_count
     global test_pass_count
@@ -195,10 +196,10 @@ def test_command(command):
     print_test_header(test_count, command)
 
     bash_stdout, bash_stderr, bash_returncode = run_command(
-        command, bash_path, bash_dir
+        command, bash_path, bash_dir, no_env=no_env
     )
     mini_stdout, mini_stderr, mini_returncode = run_command(
-        command, minishell_path, mini_dir
+        command, minishell_path, mini_dir, no_env=no_env
     )
 
     passed = 0
@@ -343,9 +344,11 @@ def main():
 
     for block in selected_blocks:
         if block in test_blocks:
+            no_env = "no-env" in block.lower()
             print(f"\nRunning test block: {block}")
+            print(f"no env = {no_env}")
             for command in test_blocks[block]:
-                test_command(command)
+                test_command(command, no_env=no_env)
         else:
             print(f"Test block {block} not found in test file.")
 
