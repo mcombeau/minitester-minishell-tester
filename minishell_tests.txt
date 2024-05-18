@@ -13,13 +13,13 @@ hello
 $
 ./
 ../
-./$D_EXISTS
+./existing_dir
 ../fake_dir/
-./$F_EXISTING
+./existing_file
 ./nonexistant_file
-./$F_EXECUTABLE
-.$F_EXECUTABLE
-$F_EXECUTABLE
+./executable_file
+.executable_file
+executable_file
 
 -- BASIC EXECUTION (no environment) --
 unset PATH; pwd
@@ -36,13 +36,13 @@ unset PATH; ..
 unset PATH; $
 unset PATH; ./
 unset PATH; ../
-unset PATH; ./$D_EXISTS
+unset PATH; ./existing_dir
 unset PATH; ../fake_dir/
-unset PATH; ./$F_EXISTING
+unset PATH; ./existing_file
 unset PATH; ./nonexistant_file
-unset PATH; ./$F_EXECUTABLE
-unset PATH; .$F_EXECUTABLE
-unset PATH; $F_EXECUTABLE
+unset PATH; ./executable_file
+unset PATH; .executable_file
+unset PATH; executable_file
 
 -- SPACES --
 ""
@@ -63,14 +63,14 @@ ls\t\t\t\t\t\t\t\t\t\t\t\t
 \t    ls\t\t  -l -a\t\t   
 -- PIPELINE --
 ls -l | wc -l
-cat $F_IN1 | grep dream
-cat $F_IN1 | grep dream | cat -e
-cat $F_IN1 | grep dream | wc -l
-cat $F_IN1 | grep dream | wc -l | cd x
-cat $F_IN1 | grep dream | wc -l | x
-x | cat $F_IN1 | grep dream | wc -l
-cat $F_IN1 | x | grep dream | wc -l
-cat $F_IN1 | grep dream | x | wc -l
+cat valid_infile_1 | grep dream
+cat valid_infile_1 | grep dream | cat -e
+cat valid_infile_1 | grep dream | wc -l
+cat valid_infile_1 | grep dream | wc -l | cd x
+cat valid_infile_1 | grep dream | wc -l | x
+x | cat valid_infile_1 | grep dream | wc -l
+cat valid_infile_1 | x | grep dream | wc -l
+cat valid_infile_1 | grep dream | x | wc -l
 cat /dev/random | head -c 100 | wc -c
 x | x | x | x | x
 x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x|x
@@ -100,8 +100,8 @@ echo '$'USER
 echo $""USER
 echo $''USER
 echo $USER"" ''
-echo \"cat $F_IN1 | cat > $F_OUT1\"
-echo 'cat $F_IN1 | cat > $F_OUT1'
+echo \"cat valid_infile_1 | cat > outfile1\"
+echo 'cat valid_infile_1 | cat > outfile1'
 ls ""
 ls '\"
 ls \"\'
@@ -198,10 +198,10 @@ ls << >>
 ls << <
 ls << <<
 ls > >> |
-< < $F_IN1 cat
-<< << $F_IN1 cat
-<< < $F_IN1 cat
-< << $F_IN1 cat
+< < valid_infile_1 cat
+<< << valid_infile_1 cat
+<< < valid_infile_1 cat
+< << valid_infile_1 cat
 < $FAKE_VAR cat
 cat < $FAKE_VAR
 cat < $123456
@@ -409,20 +409,20 @@ cd .
 cd .; pwd
 cd ..
 cd ..; pwd
-cd $D_EXISTS
-cd $D_EXISTS; pwd
+cd existing_dir
+cd existing_dir; pwd
 cd /dev
 cd /dev; pwd
 cd /Users
 cd /Users; pwd
 cd fake_dir
 cd fake_dir; pwd
-cd $D_FORBIDDEN
-cd $D_FORBIDDEN; pwd
-cd $F_EXISTING
-cd $F_EXISTING; pwd
-cd $F_FORBIDDEN
-cd $F_FORBIDDEN; pwd
+cd forbidden_dir
+cd forbidden_dir; pwd
+cd existing_file
+cd existing_file; pwd
+cd forbidden_file
+cd forbidden_file; pwd
 cd ../../../../../../../../../../../../../../../../../../../../../../
 cd ../../../../../../../../../../../../../../../../../../../../../../; pwd
 cd $HOME
@@ -441,20 +441,20 @@ unset PATH; cd .
 unset PATH; cd .; pwd
 unset PATH; cd ..
 unset PATH; cd ..; pwd
-unset PATH; cd $D_EXISTS
-unset PATH; cd $D_EXISTS; pwd
+unset PATH; cd existing_dir
+unset PATH; cd existing_dir; pwd
 unset PATH; cd /dev
 unset PATH; cd /dev; pwd
 unset PATH; cd /Users
 unset PATH; cd /Users; pwd
 unset PATH; cd fake_dir
 unset PATH; cd fake_dir; pwd
-unset PATH; cd $D_FORBIDDEN
-unset PATH; cd $D_FORBIDDEN; pwd
-unset PATH; cd $F_EXISTING
-unset PATH; cd $F_EXISTING; pwd
-unset PATH; cd $F_FORBIDDEN
-unset PATH; cd $F_FORBIDDEN; pwd
+unset PATH; cd forbidden_dir
+unset PATH; cd forbidden_dir; pwd
+unset PATH; cd existing_file
+unset PATH; cd existing_file; pwd
+unset PATH; cd forbidden_file
+unset PATH; cd forbidden_file; pwd
 unset PATH; cd $HOME
 unset PATH; cd $HOME; pwd
 unset PATH; unset HOME; cd $HOME
@@ -510,7 +510,7 @@ exit 9999999999999999999999999999999999999999999999
 exit -9999999999999999999999999999999999999999999999
 exit _0
 exit 0_
-exit 5 < $F_IN1
+exit 5 < valid_infile_1
 exit 1 | exit 0
 exit 0 | exit 1
 ls | exit
@@ -542,113 +542,113 @@ unset PATH; exit 9999999999999999999999999999999999999999999999
 unset PATH; exit -9999999999999999999999999999999999999999999999
 
 -- INFILE --
-< $F_IN1 cat
-<$F_IN1 cat
-cat < $F_IN1
-cat <$F_IN1
-< $F_IN1; echo \$?
-< $F_DOES_NOT_EXIST
-< $F_FORBIDDEN
+< valid_infile_1 cat
+<valid_infile_1 cat
+cat < valid_infile_1
+cat <valid_infile_1
+< valid_infile_1; echo \$?
+< file_does_not_exist
+< forbidden_file
 cat <
-cat < $F_DOES_NOT_EXIST
-cat < $F_DOES_NOT_EXIST
-< $F_DOES_NOT_EXIST cat
-<$F_DOES_NOT_EXIST cat
-cat < $F_FORBIDDEN
-cat <$F_FORBIDDEN
-< $F_FORBIDDEN cat
-<$F_FORBIDDEN cat
-< $F_DOES_NOT_EXIST < $F_IN1 cat
-cat < $F_IN1 < $F_DOES_NOT_EXIST
-cat < $F_IN1 < $F_IN1 < $F_IN1
-cat < $F_IN1 <
-cat < $F_IN1 < $F_IN2
-<$F_IN1 cat < $F_IN2
-cat << < $F_IN1
-cat << << $F_IN1
-cat <<<< $F_IN1
-cat < $F_FORBIDDEN < $F_IN1
-cat < $F_IN1 < $F_FORBIDDEN
-cat < $F_FORBIDDEN | cat < $F_IN1
-cat < $F_IN1 | cat < $F_FORBIDDEN
+cat < file_does_not_exist
+cat < file_does_not_exist
+< file_does_not_exist cat
+<file_does_not_exist cat
+cat < forbidden_file
+cat <forbidden_file
+< forbidden_file cat
+<forbidden_file cat
+< file_does_not_exist < valid_infile_1 cat
+cat < valid_infile_1 < file_does_not_exist
+cat < valid_infile_1 < valid_infile_1 < valid_infile_1
+cat < valid_infile_1 <
+cat < valid_infile_1 < valid_infile_2
+<valid_infile_1 cat < valid_infile_2
+cat << < valid_infile_1
+cat << << valid_infile_1
+cat <<<< valid_infile_1
+cat < forbidden_file < valid_infile_1
+cat < valid_infile_1 < forbidden_file
+cat < forbidden_file | cat < valid_infile_1
+cat < valid_infile_1 | cat < forbidden_file
 
 -- TRUNC OUTFILE --
-> $F_OUT1; echo \$?
-> $F_FORBIDDEN; echo \$?
+> outfile1; echo \$?
+> forbidden_file; echo \$?
 echo hello world >
-echo hello world > $F_OUT1
-echo abcdefghijk >$F_OUT1
-echo hello world> $F_OUT1
-> $F_OUT1 echo abcdefghijk
->$F_OUT1 echo hello world
-echo hello world > $F_FORBIDDEN
-> $F_OUT1 echo hi | echo bye
-echo ab | echo cde > $F_OUT1
-cat $F_IN1 > $F_OUT1
-cat $F_IN1 | wc -l > $F_OUT1
-cat $F_IN1 | grep dream | sed s/e/../g | sed s/d/X/g > $F_OUT1
-echo abcdefghijk > $F_OUT1 > $F_OUT2
-echo hello world > $F_OUT1 > $F_OUT1
-echo hello world > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1
-echo hello world > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT1 > $F_OUT2
-echo abcdefghijk > $F_FORBIDDEN > $F_OUT1 > $F_OUT2
-echo abcdefghijk > $F_OUT1 > $F_FORBIDDEN > $F_OUT2
-echo abcdefghijk > $F_OUT1 > $F_OUT2 > $F_FORBIDDEN
-echo > $F_OUT1 a b c d e
-echo a > $F_OUT1 b c d e
-echo a b > $F_OUT1 c d e
-echo a b c > $F_OUT1 d e
-echo a b c d > $F_OUT1 e
-echo a b c d e > $F_OUT1
-echo > $F_OUT1 a b c d e > $F_OUT2
-echo a > $F_OUT1 b c d e > $F_OUT2
-echo a b > $F_OUT1 c d e > $F_OUT2
-echo a b c > $F_OUT1 d e > $F_OUT2
-echo a b c d > $F_OUT1 e > $F_OUT2
-echo a b c d e > $F_OUT1 > $F_OUT2
-echo hello > $F_OUT1 | echo world > $F_OUT1
-echo 01234 > $F_OUT1 | echo 56789 > $F_OUT2
-echo hello > $F_OUT1 | echo world > $F_FORBIDDEN
-echo 01234 > $F_FORBIDDEN | echo 56789 > $F_OUT1
+echo hello world > outfile1
+echo abcdefghijk >outfile1
+echo hello world> outfile1
+> outfile1 echo abcdefghijk
+>outfile1 echo hello world
+echo hello world > forbidden_file
+> outfile1 echo hi | echo bye
+echo ab | echo cde > outfile1
+cat valid_infile_1 > outfile1
+cat valid_infile_1 | wc -l > outfile1
+cat valid_infile_1 | grep dream | sed s/e/../g | sed s/d/X/g > outfile1
+echo abcdefghijk > outfile1 > outfile2
+echo hello world > outfile1 > outfile1
+echo hello world > outfile1 > outfile1 > outfile1 > outfile1 > outfile1 > outfile1
+echo hello world > outfile1 > outfile1 > outfile1 > outfile1 > outfile1 > outfile2
+echo abcdefghijk > forbidden_file > outfile1 > outfile2
+echo abcdefghijk > outfile1 > forbidden_file > outfile2
+echo abcdefghijk > outfile1 > outfile2 > forbidden_file
+echo > outfile1 a b c d e
+echo a > outfile1 b c d e
+echo a b > outfile1 c d e
+echo a b c > outfile1 d e
+echo a b c d > outfile1 e
+echo a b c d e > outfile1
+echo > outfile1 a b c d e > outfile2
+echo a > outfile1 b c d e > outfile2
+echo a b > outfile1 c d e > outfile2
+echo a b c > outfile1 d e > outfile2
+echo a b c d > outfile1 e > outfile2
+echo a b c d e > outfile1 > outfile2
+echo hello > outfile1 | echo world > outfile1
+echo 01234 > outfile1 | echo 56789 > outfile2
+echo hello > outfile1 | echo world > forbidden_file
+echo 01234 > forbidden_file | echo 56789 > outfile1
 
 -- APPEND OUTFILE --
->> $F_OUT1; echo \$?
->> $F_FORBIDDEN; echo \$?
+>> outfile1; echo \$?
+>> forbidden_file; echo \$?
 echo hello world >>
-echo hello world >> $F_OUT1
-echo abcdefghijk >>$F_OUT1
-echo hello world>> $F_OUT1
->> $F_OUT1 echo abcdefghijk
->>$F_OUT1 echo hello world
-echo hello world >> $F_FORBIDDEN
->> $F_OUT1 echo hi | echo bye
-echo ab | echo cde >> $F_OUT1
-cat $F_IN1 >> $F_OUT1
-cat $F_IN1 | wc -l >> $F_OUT1
-cat $F_IN1 | grep dream | sed s/e/../g | sed s/d/X/g >> $F_OUT1
-echo abcdefghijk >> $F_OUT1 >> $F_OUT2
-echo hello world >> $F_OUT1 >> $F_OUT1
-echo hello world >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1
-echo hello world >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT1 >> $F_OUT2
-echo abcdefghijk >> $F_FORBIDDEN >> $F_OUT1 >> $F_OUT2
-echo abcdefghijk >> $F_OUT1 >> $F_FORBIDDEN >> $F_OUT2
-echo abcdefghijk >> $F_OUT1 >> $F_OUT2 >> $F_FORBIDDEN
-echo >> $F_OUT1 a b c d e
-echo a >> $F_OUT1 b c d e
-echo a b >> $F_OUT1 c d e
-echo a b c >> $F_OUT1 d e
-echo a b c d >> $F_OUT1 e
-echo a b c d e >> $F_OUT1
-echo >> $F_OUT1 a b c d e >> $F_OUT2
-echo a >> $F_OUT1 b c d e >> $F_OUT2
-echo a b >> $F_OUT1 c d e >> $F_OUT2
-echo a b c >> $F_OUT1 d e >> $F_OUT2
-echo a b c d >> $F_OUT1 e >> $F_OUT2
-echo a b c d e >> $F_OUT1 >> $F_OUT2
-echo hello >> $F_OUT1 | echo world >> $F_OUT1
-echo 01234 >> $F_OUT1 | echo 56789 >> $F_OUT2
-echo hello >> $F_OUT1 | echo world >> $F_FORBIDDEN
-echo 01234 >> $F_FORBIDDEN | echo 56789 >> $F_OUT1
+echo hello world >> outfile1
+echo abcdefghijk >>outfile1
+echo hello world>> outfile1
+>> outfile1 echo abcdefghijk
+>>outfile1 echo hello world
+echo hello world >> forbidden_file
+>> outfile1 echo hi | echo bye
+echo ab | echo cde >> outfile1
+cat valid_infile_1 >> outfile1
+cat valid_infile_1 | wc -l >> outfile1
+cat valid_infile_1 | grep dream | sed s/e/../g | sed s/d/X/g >> outfile1
+echo abcdefghijk >> outfile1 >> outfile2
+echo hello world >> outfile1 >> outfile1
+echo hello world >> outfile1 >> outfile1 >> outfile1 >> outfile1 >> outfile1 >> outfile1
+echo hello world >> outfile1 >> outfile1 >> outfile1 >> outfile1 >> outfile1 >> outfile2
+echo abcdefghijk >> forbidden_file >> outfile1 >> outfile2
+echo abcdefghijk >> outfile1 >> forbidden_file >> outfile2
+echo abcdefghijk >> outfile1 >> outfile2 >> forbidden_file
+echo >> outfile1 a b c d e
+echo a >> outfile1 b c d e
+echo a b >> outfile1 c d e
+echo a b c >> outfile1 d e
+echo a b c d >> outfile1 e
+echo a b c d e >> outfile1
+echo >> outfile1 a b c d e >> outfile2
+echo a >> outfile1 b c d e >> outfile2
+echo a b >> outfile1 c d e >> outfile2
+echo a b c >> outfile1 d e >> outfile2
+echo a b c d >> outfile1 e >> outfile2
+echo a b c d e >> outfile1 >> outfile2
+echo hello >> outfile1 | echo world >> outfile1
+echo 01234 >> outfile1 | echo 56789 >> outfile2
+echo hello >> outfile1 | echo world >> forbidden_file
+echo 01234 >> forbidden_file | echo 56789 >> outfile1
 
 -- COMBINATION INFILE/OUTFILE --
 < >> >
@@ -657,41 +657,41 @@ echo 01234 >> $F_FORBIDDEN | echo 56789 >> $F_OUT1
 > >> <
 >> > <
 >> < >
-echo ABC > $F_OUT1 | echo DEF >> $F_OUT2
-echo GHI >> $F_OUT1 | echo KLM > $F_OUT2
-echo OPQ > $F_OUT1 >> $F_OUT2
-echo RST >> $F_OUT1 > $F_OUT2
-< $F_IN1 cat | echo UVW > $F_OUT1 | echo XYZ >> $F_OUT2
-< $F_IN1 cat > $F_OUT1 | echo ABC >> $F_OUT1 | echo DEF > $F_OUT2
-cat < $F_OUT1 >
-cat < $F_OUT1 >>
-cat < > $F_OUT1
-cat < >> $F_OUT1
-cat > >> $F_OUT1
-cat >> > $F_OUT1
-< $F_OUT1 cat > $F_OUT1
-< $F_OUT1 cat >> $F_OUT1
-cat > $F_OUT1 < $F_OUT1
-cat >> $F_OUT1 < $F_OUT1
-cat < $F_OUT1 > $F_OUT1
-cat < $F_OUT1 >> $F_OUT1
-< $F_IN1 < $F_IN2 cat > $F_OUT1 >> $F_OUT2
-< $F_IN1 < $F_IN2 cat >> $F_OUT1 > $F_OUT2
-< $F_FORBIDDEN < $F_IN2 cat > $F_OUT1 >> $F_OUT2
-< $F_IN1 < $F_FORBIDDEN cat > $F_OUT1 >> $F_OUT2
-< $F_IN1 < $F_IN2 cat > $F_FORBIDDEN >> $F_OUT1
-< $F_IN2 < $F_IN1 cat > $F_OUT1 >> $F_FORBIDDEN
-< $F_IN1 < $F_IN2 cat >> $F_FORBIDDEN > $F_OUT1
-< $F_IN2 < $F_IN1 cat >> $F_OUT1 > $F_FORBIDDEN
-< $F_FORBIDDEN cat > $F_FORBIDDEN >> $F_FORBIDDEN
-< $F_FORBIDDEN cat >> $F_FORBIDDEN > $F_FORBIDDEN
-cat >> $F_FORBIDDEN > $F_FORBIDDEN < $F_FORBIDDEN
-< $F_IN1 cat | grep dream > $F_FORBIDDEN
-< $F_IN2 cat | grep dream >> $F_FORBIDDEN
-< $F_IN1 cat >> $F_FORBIDDEN | wc -l > $F_OUT1
-< $F_IN2 cat > $F_FORBIDDEN | wc -l >> $F_OUT1
-< $F_IN1 cat >> $F_OUT1 | wc -l > $F_FORBIDDEN
-< $F_IN2 cat > $F_OUT1 | wc -l >> $F_FORBIDDEN
+echo ABC > outfile1 | echo DEF >> outfile2
+echo GHI >> outfile1 | echo KLM > outfile2
+echo OPQ > outfile1 >> outfile2
+echo RST >> outfile1 > outfile2
+< valid_infile_1 cat | echo UVW > outfile1 | echo XYZ >> outfile2
+< valid_infile_1 cat > outfile1 | echo ABC >> outfile1 | echo DEF > outfile2
+cat < outfile1 >
+cat < outfile1 >>
+cat < > outfile1
+cat < >> outfile1
+cat > >> outfile1
+cat >> > outfile1
+< outfile1 cat > outfile1
+< outfile1 cat >> outfile1
+cat > outfile1 < outfile1
+cat >> outfile1 < outfile1
+cat < outfile1 > outfile1
+cat < outfile1 >> outfile1
+< valid_infile_1 < valid_infile_2 cat > outfile1 >> outfile2
+< valid_infile_1 < valid_infile_2 cat >> outfile1 > outfile2
+< forbidden_file < valid_infile_2 cat > outfile1 >> outfile2
+< valid_infile_1 < forbidden_file cat > outfile1 >> outfile2
+< valid_infile_1 < valid_infile_2 cat > forbidden_file >> outfile1
+< valid_infile_2 < valid_infile_1 cat > outfile1 >> forbidden_file
+< valid_infile_1 < valid_infile_2 cat >> forbidden_file > outfile1
+< valid_infile_2 < valid_infile_1 cat >> outfile1 > forbidden_file
+< forbidden_file cat > forbidden_file >> forbidden_file
+< forbidden_file cat >> forbidden_file > forbidden_file
+cat >> forbidden_file > forbidden_file < forbidden_file
+< valid_infile_1 cat | grep dream > forbidden_file
+< valid_infile_2 cat | grep dream >> forbidden_file
+< valid_infile_1 cat >> forbidden_file | wc -l > outfile1
+< valid_infile_2 cat > forbidden_file | wc -l >> outfile1
+< valid_infile_1 cat >> outfile1 | wc -l > forbidden_file
+< valid_infile_2 cat > outfile1 | wc -l >> forbidden_file
 
 -- EXIT_STATUS --
 echo $?
@@ -700,12 +700,12 @@ $?
 $? + $?
 $?; echo $?
 fakecmd; echo $?
-cat < $F_DOES_NOT_EXIST; echo \$?
-cat < $F_FORBIDDEN; echo \$?
-./$F_FORBIDDEN; echo \$?
-cd $D_EXISTS; echo \$?
-cd $D_FORBIDDEN; echo \$?
+cat < file_does_not_exist; echo \$?
+cat < forbidden_file; echo \$?
+./forbidden_file; echo \$?
+cd existing_dir; echo \$?
+cd forbidden_dir; echo \$?
 cd dir_does_not_exist; echo \$?
-cd $F_DOES_NOT_EXIST; echo \$?
-cd $F_IN1; echo \$?
+cd file_does_not_exist; echo \$?
+cd valid_infile_1; echo \$?
 ls dir_does_not_exist; echo \$?
