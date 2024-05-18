@@ -21,4 +21,4 @@ test_count = 0
 test_fail_count = 0
 test_pass_count = 0
 
-colored_output = False
+config = {"colored_output": False}

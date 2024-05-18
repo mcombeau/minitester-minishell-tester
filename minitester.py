@@ -6,8 +6,8 @@ from tester import (
     print_total,
     get_args,
     parse_test_file,
-    colored_output,
 )
+from tester.config import config
 
 
 def main():
@@ -24,7 +24,7 @@ def main():
         return
 
     if args.color:
-        colored_output = True
+        config["colored_output"] = True
 
     selected_blocks = args.testblock if args.testblock else test_blocks.keys()
 
