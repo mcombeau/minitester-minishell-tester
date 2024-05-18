@@ -1,4 +1,4 @@
--- BASIC EXECUTION --
+#basic
 ls
 ls -la
 /usr/bin/ls
@@ -21,7 +21,7 @@ $
 .executable_file
 executable_file
 
--- BASIC EXECUTION (no environment) --
+#basic-no-env
 unset PATH; pwd
 unset PATH; echo hello
 unset PATH; /usr/bin/ls
@@ -44,7 +44,7 @@ unset PATH; ./executable_file
 unset PATH; .executable_file
 unset PATH; executable_file
 
--- SPACES --
+#spaces
 ""
 "                        "
 						     
@@ -61,7 +61,8 @@ ls\t\t\t\t\t\t\t\t\t\t\t\t
       ls         -l     -a
 \t\tls\t\t\t\t-l\t\t\t\t-a
 \t    ls\t\t  -l -a\t\t   
--- PIPELINE --
+
+#pipes
 ls -l | wc -l
 cat valid_infile_1 | grep dream
 cat valid_infile_1 | grep dream | cat -e
@@ -78,7 +79,7 @@ ls | ls | ls
 ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls|ls
 
 
--- QUOTE HANDLING --
+#quotes
 ec""ho test
 ec''ho test
 ""echo test
@@ -100,17 +101,17 @@ echo '$'USER
 echo $""USER
 echo $''USER
 echo $USER"" ''
-echo \"cat valid_infile_1 | cat > outfile1\"
+echo "cat valid_infile_1 | cat > outfile1"
 echo 'cat valid_infile_1 | cat > outfile1'
 ls ""
-ls '\"
-ls \"\'
+ls '"
+ls "'
 ls " "
-ls \" ' \"
+ls " ' "
 "ls"
 l"s"
 
--- VARIABLE EXPANSION --
+#env-variables
 $USER
 ls $HOME
 echo $
@@ -120,21 +121,21 @@ echo $USER
 echo $USE
 echo $USE_
 echo "$USER"
-echo '\$USER'
+echo '$USER'
 echo "|$USER|"
-echo '|\$USER|'
+echo '|$USER|'
 echo $USER $USER $USER
 echo $USER$USER$USER
 echo "$USER $USER $USER"
 echo "$USER$USER$USER"
-echo '\$USER \$USER \$USER'
-echo '\$USER\$USER\$USER'
+echo '$USER $USER $USER'
+echo '$USER$USER$USER'
 echo $USERhello
 echo hello$USER
 echo "$USERhello"
 echo "hello$USER"
-echo '\$USERhello'
-echo 'hello\$USER'
+echo '$USERhello'
+echo 'hello$USER'
 echo hello $USER
 echo hello $NOT_A_VAR $NOT_A_VAR $NOT_A_VAR $USER
 echo $NOT_A_VAR $NOT_A_VAR $NOT_A_VAR $USER
@@ -142,9 +143,9 @@ echo hello $NOT_A_VAR $NOT_A_VAR $NOT_A_VAR
 echo "hello $NOT_A_VAR $NOT_A_VAR $NOT_A_VAR $USER"
 export ECHO=echo; $ECHO $ECHO
 export L="ls -la"; $L
-export L='ls -la'; \$L
+export L='ls -la'; $L
 
--- SYNTAX ERROR --
+#syntax
 |
 ||
 |||
@@ -209,7 +210,7 @@ cat < $123456
 echo hello | ;
 ls > <
 
--- ECHO --
+#echo
 ECHO
 Echo
 echo
@@ -242,25 +243,25 @@ echo a	-nnnnhello
 echo -n -nnn hello -n
 echo a	hello -nhello
 
--- ECHO (no environment) --
+#echo-no-env
 unset PATH; echo hello world
 unset PATH; echo $USER
 unset PATH; echo $PATH
 
--- ENV --
+#env
 ENV | sort | grep -v SHLVL | grep -v _=
 Env | sort | grep -v SHLVL | grep -v _=
 env | sort | grep -v SHLVL | grep -v _=
 env | wc -l
 env | grep PATH
 
--- ENV (no environment) --
+#env-no-env
 unset PATH; env | grep PATH
 unset PATH; env | grep USER
 unset PATH; env | grep SHELL
 unset PATH; env | grep PWD
 
--- EXPORT --
+#export
 EXPORT
 Export
 export ""
@@ -294,37 +295,37 @@ export 1=
 export 1=a
 export HELLOWORLD =a
 export HELLOWORLD= a
-export HELLO\'WORLD\'=a
-export HELLO\"WORLD\"=a
-export HELLO\$WORLD=a
+export HELLO'WORLD'=a
+export HELLO"WORLD"=a
+export HELLO$WORLD=a
 export HELLO_WORLD=a
-export A='hello this world is wonderful'; echo \$A
-export A=\"hello this world is wonderful\"; echo \$A
-export A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo \$A\$B\$C
-export 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo \$A\$B\$C
-export A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf '; echo \$A\$B\$C
-export A B C; echo \$A\$B\$C
+export A='hello this world is wonderful'; echo $A
+export A="hello this world is wonderful"; echo $A
+export A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo $A$B$C
+export 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo $A$B$C
+export A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf '; echo $A$B$C
+export A B C; echo $A$B$C
 export 'HELLO@'=hello
-export \"HELLO'\"=hello
-export 'HELLO\"'=hello
+export "HELLO'"=hello
+export 'HELLO"'=hello
 export 'HELLO$'=hello
 export 'HELLO!'=hello
 export 'HELLO|'=hello
 export 'HELLO&'=hello
 export 'HELLO\\'=hello
 export ALPHA="abc def ghi"; echo $ALPHA
-export ALPHA='abc def ghi'; echo \$ALPHA
+export ALPHA='abc def ghi'; echo $ALPHA
 export DIGITS="0 1 2 3 4 5 6 7 8 9"; echo $DIGITS
-export DIGITS='0 1 2 3 4 5 6 7 8 9'; echo \$DIGITS
+export DIGITS='0 1 2 3 4 5 6 7 8 9'; echo $DIGITS
 export DIGITS=0 1 2 3 4 5 6 7 8 9; echo $DIGITS
 
--- EXPORT (no environment) --
+#export-no-env
 unset PATH; export hello=42
 unset PATH; export 42=hello
 unset PATH; export hello=42; echo $hello
 unset PATH; export PATH=/usr/bin:/sbin/; ls
 
--- UNSET --
+#unset
 UNSET
 Unset
 unset
@@ -337,16 +338,16 @@ unset ""
 unset ''
 export A=a; unset A; echo $A
 export A=a A2=a; unset A; echo $A $A2
-export A=a; unset 'A '; echo \$A
-export A=a; unset A=; echo \$A
-export A=a; unset 'A='; echo \$A
+export A=a; unset 'A '; echo $A
+export A=a; unset A=; echo $A
+export A=a; unset 'A='; echo $A
 export A=a B=b C=c; unset A B C; echo $A$B$C
 export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C
-export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo \$A\$B\$C
+export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo $A$B$C
 export A=a B=b C=c; unset 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C
-export A=a B=b C=c; unset 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo \$A\$B\$C
+export A=a B=b C=c; unset 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf ' C; echo $A$B$C
 export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf '
-export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf '; echo \$A\$B\$C
+export A=a B=b C=c; unset A 'asdf ' B ' asdf asdf asd f' ' asdf ' '' 'asdf '; echo $A$B$C
 export A=a B=b C=c; unset A
 export A=a B=b C=c; unset A; echo $A$B$C
 export A=a B=b C=c; unset B
@@ -354,21 +355,21 @@ export A=a B=b C=c; unset B; echo $A$B$C
 export A=a B=b C=c; unset C
 export A=a B=b C=c; unset C; echo $A$B$C
 unset 'HELLO@'
-unset \"HELLO'\"
-unset 'HELLO\"'
+unset "HELLO'"
+unset 'HELLO"'
 unset 'HELLO$'
 unset 'HELLO!'
 unset 'HELLO|'
 unset 'HELLO&'
 unset 'HELLO\\'
 
--- UNSET (no environment) --
+#unset-no-env
 unset PATH
 unset PATH; export hello=42; unset hello
 unset PATH; export hello=42; unset hello; echo $hello
 unset PATH; unset USER
 
--- PWD --
+#pwd
 PWD
 Pwd
 pwd
@@ -388,7 +389,7 @@ export OLDPWD=abc/def; pwd | cat -e
 export PWD=hello/world OLDPWD=abc/def; pwd | cat -e
 mkdir a a/b; cd a/b; rm -rf ../../a; pwd
 
--- PWD (no environment) --
+#pwd-no-env
 unset PATH; pwd
 unset PATH; pwd
 unset PATH; unset PWD; pwd
@@ -398,7 +399,7 @@ unset PATH; export PWD='hello/world'; pwd
 unset PATH; export PWD='/hello/world/'; pwd
 unset PATH; export PWD='/usr/bin/'; pwd
 
--- CD --
+#cd
 CD
 CD; pwd
 Cd
@@ -434,7 +435,7 @@ unset HOME; cd; pwd
 mkdir a a/b; cd a/b; rm -rf ../../a; cd ..
 mkdir a a/b; cd a/b; rm -rf ../../a; unset PWD OLDPWD; cd ..
 
--- CD (no environment) --
+#cd-no-env
 unset PATH; cd
 unset PATH; cd; pwd
 unset PATH; cd .
@@ -462,7 +463,7 @@ unset PATH; unset HOME; cd $HOME; pwd
 unset PATH; unset HOME; cd
 unset PATH; unset HOME; cd; pwd
 
--- EXIT --
+#exit
 exit
 Exit
 EXIT
@@ -524,7 +525,7 @@ exit abc 12 | ls
 "ls > file | exit
 "ls -l > x | exit | wc -l
 
--- EXIT (no environment) --
+#exit-no-env
 unset PATH; exit
 unset PATH; exit 42
 unset PATH; exit 42; echo "Should have exited."
@@ -541,12 +542,12 @@ unset PATH; exit + 42
 unset PATH; exit 9999999999999999999999999999999999999999999999
 unset PATH; exit -9999999999999999999999999999999999999999999999
 
--- INFILE --
+#infile
 < valid_infile_1 cat
 <valid_infile_1 cat
 cat < valid_infile_1
 cat <valid_infile_1
-< valid_infile_1; echo \$?
+< valid_infile_1; echo $?
 < file_does_not_exist
 < forbidden_file
 cat <
@@ -572,9 +573,9 @@ cat < valid_infile_1 < forbidden_file
 cat < forbidden_file | cat < valid_infile_1
 cat < valid_infile_1 | cat < forbidden_file
 
--- TRUNC OUTFILE --
-> outfile1; echo \$?
-> forbidden_file; echo \$?
+#outfile-trunc
+> outfile1; echo $?
+> forbidden_file; echo $?
 echo hello world >
 echo hello world > outfile1
 echo abcdefghijk >outfile1
@@ -611,9 +612,9 @@ echo 01234 > outfile1 | echo 56789 > outfile2
 echo hello > outfile1 | echo world > forbidden_file
 echo 01234 > forbidden_file | echo 56789 > outfile1
 
--- APPEND OUTFILE --
->> outfile1; echo \$?
->> forbidden_file; echo \$?
+#outfile-append
+>> outfile1; echo $?
+>> forbidden_file; echo $?
 echo hello world >>
 echo hello world >> outfile1
 echo abcdefghijk >>outfile1
@@ -650,7 +651,7 @@ echo 01234 >> outfile1 | echo 56789 >> outfile2
 echo hello >> outfile1 | echo world >> forbidden_file
 echo 01234 >> forbidden_file | echo 56789 >> outfile1
 
--- COMBINATION INFILE/OUTFILE --
+#infile-outfile
 < >> >
 < > >>
 > < >>
@@ -693,19 +694,19 @@ cat >> forbidden_file > forbidden_file < forbidden_file
 < valid_infile_1 cat >> outfile1 | wc -l > forbidden_file
 < valid_infile_2 cat > outfile1 | wc -l >> forbidden_file
 
--- EXIT_STATUS --
+#exit-status
 echo $?
 echo; echo $?
 $?
 $? + $?
 $?; echo $?
 fakecmd; echo $?
-cat < file_does_not_exist; echo \$?
-cat < forbidden_file; echo \$?
-./forbidden_file; echo \$?
-cd existing_dir; echo \$?
-cd forbidden_dir; echo \$?
-cd dir_does_not_exist; echo \$?
-cd file_does_not_exist; echo \$?
-cd valid_infile_1; echo \$?
-ls dir_does_not_exist; echo \$?
+cat < file_does_not_exist; echo $?
+cat < forbidden_file; echo $?
+./forbidden_file; echo $?
+cd existing_dir; echo $?
+cd forbidden_dir; echo $?
+cd dir_does_not_exist; echo $?
+cd file_does_not_exist; echo $?
+cd valid_infile_1; echo $?
+ls dir_does_not_exist; echo $?
