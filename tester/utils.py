@@ -1,7 +1,7 @@
 import os
 import re
 from enum import Enum
-from .config import test_count, test_fail_count, test_pass_count
+from .config import test_count, test_fail_count, test_pass_count, colored_output
 
 
 class Color(Enum):
@@ -26,9 +26,12 @@ def strip_invisible_chars(text):
 
 
 def print_formatted(label, status, width=40):
-    color_code = Color.GREEN.value if status == "OK" else Color.RED.value
-    reset_code = Color.RESET.value
-    print(f"{label.ljust(width, '.')} {color_code}{status}{reset_code}")
+    if colored_output:
+        color_code = Color.GREEN.value if status == "OK" else Color.RED.value
+        reset_code = Color.RESET.value
+        print(f"{label.ljust(width, '.')} {color_code}{status}{reset_code}")
+    else:
+        print(f"{label.ljust(width, '.')} {status}")
 
 
 def print_total():
@@ -52,7 +55,10 @@ def print_test_block_options(test_blocks):
 def print_test_header(test_count, command):
     print()
     print(f"[{test_count:03}]" + "-" * 40)
-    print(f"command: {Color.CYAN.value}{command}{Color.RESET.value}")
+    if colored_output:
+        print(f"command: {Color.CYAN.value}{command}{Color.RESET.value}")
+    else:
+        print(f"command: {command}")
 
 
 def print_test_block_header(block_title):

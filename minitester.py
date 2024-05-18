@@ -6,10 +6,12 @@ from tester import (
     print_total,
     get_args,
     parse_test_file,
+    colored_output,
 )
 
 
 def main():
+    global colored_output
     argparser, args = get_args()
     test_blocks = parse_test_file("minishell_tests.txt")
 
@@ -20,6 +22,9 @@ def main():
     if not args.testblock and not args.all:
         argparser.print_help()
         return
+
+    if args.color:
+        colored_output = True
 
     selected_blocks = args.testblock if args.testblock else test_blocks.keys()
 

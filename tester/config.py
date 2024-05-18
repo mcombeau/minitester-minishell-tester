@@ -16,7 +16,9 @@ test_files = [
     "existing_dir",
     "existing_file",
 ]
+
 test_count = 0
 test_fail_count = 0
 test_pass_count = 0
 
+colored_output = False

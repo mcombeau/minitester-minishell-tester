@@ -71,4 +71,10 @@ def get_args():
         action="append",
         help="Specify test blocks to run (can be used multiple times)",
     )
+    parser.add_argument(
+        "-c",
+        "--color",
+        action="store_true",
+        help="Display colored output (default no color)",
+    )
     return parser, parser.parse_args()
