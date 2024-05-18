@@ -1,4 +1,4 @@
-# TODO: Tests with 'pwd not working because bash and minishell are in different working directories
+# TODO: run commands without environment
 
 from enum import Enum
 import argparse
