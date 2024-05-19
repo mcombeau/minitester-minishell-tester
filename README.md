@@ -1,23 +1,21 @@
 # Minitester: A simple Minishell tester
+
 A simple tester for 42 school project minishell.
 
 ## Tests Performed
 
 This tester compares your Minishell output (file output, standard output, standard error and exit codes) against Bash over 600+ tests:
 
-* Execution tests: executables with relative and absolute paths, piped commands (`|`)
-* Parsing & syntax error tests,
-* Quote handling tests (`"` and `'`)
-* Environment variable expansion tests (`$`)
-* Builtin tests: `echo`, `env`, `export`, `unset`, `pwd`, `cd`, `exit`
-* Redirection tests: `<`, `>`, `>>`
-* Exit status tests (`$?`)
-* Tests with no environment
+- Execution tests: executables with relative and absolute paths, piped commands (`|`)
+- Parsing & syntax error tests,
+- Quote handling tests (`"` and `'`)
+- Environment variable expansion tests (`$`)
+- Builtin tests: `echo`, `env`, `export`, `unset`, `pwd`, `cd`, `exit`
+- Redirection tests: `<`, `>`, `>>`
+- Exit status tests (`$?`)
+- Tests with no environment
 
 If the output does not match, the tester displays the differences.
-
-Shell script tester:
-![minitester execution gif](https://github.com/mcombeau/minitester-minishell-tester/blob/main/screenshots/minitester.gif)
 
 Python tester:
 ![minitester execution python](https://github.com/mcombeau/minitester-minishell-tester/blob/main/screenshots/minitester-python.png)
@@ -25,6 +23,8 @@ Python tester:
 However, it does not test for memory leaks or for Norm errors. Some tests must still be performed manually, such as for signals and `ctrl-D` functionality, as well as for the heredoc.
 
 ## Prerequisites
+
+This tester requires Python3.
 
 To use this tester, your minishell must support the `-c` option, which allows passing a command as an argument, like Bash:
 
@@ -92,13 +92,34 @@ Clone this repository in your minishell directory.
 git clone git@github.com:mcombeau/minitester-minishell-tester.git
 ```
 
-If you wish to clone it elsewhere, please edit `MINISHELL_PATH` in `minitester.sh` to point to your minishell directory.
+If you wish to clone it elsewhere, please edit `minishell_path` in `tester/config.py` to point to your minishell binary.
 
 To run the program:
 
 ```bash
-$ bash minitester.sh
+$ python3 minitester.py
+```
+
+The tester runs the tests specified (one per line) in the `minishell_tests.txt` file. Each block of tests can be run independantly (see options below).
+
+```bash
+usage: python3 minitester.py [-h] [-a] [-l] [-t TESTBLOCK] [-c]
+```
+
+Options are:
+
+- `-h`: Show the help message
+- `-a`: Run all test blocks
+- `-l`: List all available test blocks
+- `-t TESTBLOCK`: Specify tests blocks to run (can be used multiple times)
+- `-c`: Display colored output (default no color)
+
+For example, to run only tests related to the `echo` built in and display the results with color, you can run:
+
+```bash
+python3 minitester.py -c -t echo -t echo-no-env
 ```
 
 ---
+
 Made by mcombeau: mcombeau@student.42.fr | LinkedIn: [mcombeau](https://www.linkedin.com/in/mia-combeau-86653420b/) | Website: [codequoi.com](https://www.codequoi.com)
