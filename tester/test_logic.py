@@ -47,19 +47,33 @@ def stdout_ok(bash_stdout, mini_stdout):
         return True
 
 
-def stderr_ok(bash_stderr, mini_stderr):
+# Implementation of || && $$ and . is not required in minishell
+# so output may differ from bash
+def is_stderr_exception(command, bash_stderr, mini_stderr):
+    bash_output = strip_invisible_chars(bash_stderr.split(":")[-1].strip())
+
+    if "free" in mini_stderr.lower():
+        return False
+
+    if "syntax error" in bash_stderr.lower() and "syntax error" in mini_stderr.lower():
+        return True
+
+    if "||" in command or "&&" in command or "$$" in command:
+        return True
+
+    if ".:" in bash_stderr:
+        return True
+
+    if bash_output in mini_stderr:
+        return True
+
+
+def stderr_ok(command, bash_stderr, mini_stderr):
     bash_output = strip_invisible_chars(bash_stderr.split(":")[-1].strip())
     mini_output = strip_invisible_chars(mini_stderr.split(":")[-1].strip()).rstrip("\n")
 
     if bash_output != mini_output:
-        if (
-            "syntax error" in bash_stderr.lower()
-            and "syntax error" in mini_stderr.lower()
-            and "free" not in mini_stderr.lower()
-        ):
-            print_formatted("stderr", "OK")
-            return True
-        if bash_output in mini_stderr and "free" not in mini_stderr:
+        if is_stderr_exception(command, bash_stderr, mini_stderr):
             print_formatted("stderr", "OK")
             return True
         print_formatted("stderr", "KO")
@@ -155,7 +169,7 @@ def test_command(command, no_env=False):
     passed = 0
 
     passed += stdout_ok(bash_stdout, mini_stdout)
-    passed += stderr_ok(bash_stderr, mini_stderr)
+    passed += stderr_ok(command, bash_stderr, mini_stderr)
     passed += returncode_ok(bash_returncode, mini_returncode)
     if ">" in command or ">>" in command:
         expected_passed += 1
