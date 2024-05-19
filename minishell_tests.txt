@@ -266,7 +266,7 @@ EXPORT
 Export
 export ""
 export 42
-export 42; env | grep 42
+export 42; env | grep 42=
 export =
 export =; env | grep = | wc -l
 export A
