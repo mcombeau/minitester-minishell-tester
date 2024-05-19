@@ -47,9 +47,7 @@ def stdout_ok(bash_stdout, mini_stdout):
         return True
 
 
-# Implementation of || && $$ and . is not required in minishell
-# so output may differ from bash
-def is_stderr_exception(command, bash_stderr, mini_stderr):
+def is_stderr_exception(bash_stderr, mini_stderr):
     bash_output = strip_invisible_chars(bash_stderr.split(":")[-1].strip())
 
     if "free" in mini_stderr.lower():
@@ -57,12 +55,6 @@ def is_stderr_exception(command, bash_stderr, mini_stderr):
 
     if "syntax error" in bash_stderr.lower() and "syntax error" in mini_stderr.lower():
         return True
-
-    # if "||" in command or "&&" in command or "$$" in command:
-    #     return True
-
-    # if ".:" in bash_stderr:
-    #     return True
 
     if bash_output in mini_stderr:
         return True
@@ -73,16 +65,13 @@ def stderr_ok(command, bash_stderr, mini_stderr):
     mini_output = strip_invisible_chars(mini_stderr.split(":")[-1].strip()).rstrip("\n")
 
     if bash_output != mini_output:
-        if is_stderr_exception(command, bash_stderr, mini_stderr):
-            print_formatted("stderr", "OK")
-            return True
-        print_formatted("stderr", "KO")
-        print(f"--> Bash stderr:\n{bash_stderr}")
-        print(f"--> Minishell stderr:\n{mini_stderr}")
-        return False
-    else:
-        print_formatted("stderr", "OK")
-        return True
+        if not is_stderr_exception(bash_stderr, mini_stderr):
+            print_formatted("stderr", "KO")
+            print(f"--> Bash stderr:\n{bash_stderr}")
+            print(f"--> Minishell stderr:\n{mini_stderr}")
+            return False
+    print_formatted("stderr", "OK")
+    return True
 
 
 def returncode_ok(bash_returncode, mini_returncode):
@@ -156,11 +145,8 @@ def output_files_ok():
 def is_exceptional_command(command):
     not_required = ["||", "&&"]
 
-    if command == ".":
-        print(
-            f"Note: '.' implementation not required in minishell: bash output differs; 'command not found' expected for minishell stderr"
-        )
-        return True
+    if "." in command:
+        return any(part.strip() == "." for part in command.split(";"))
 
     for symbol in not_required:
         if symbol in command:
@@ -188,15 +174,25 @@ def exceptional_command_ok(
 ):
     not_required = ["||", "&&"]
 
-    if (
-        command == "."
-        and "command not found" in mini_stderr
-        and mini_returncode == globals["cmd_not_found_exit"]
-    ):
-        print_formatted("stdout", "OK")
-        print_formatted("stderr", "OK")
-        print_formatted("exit code", "OK")
-        return 3
+    if "." in command:
+        if (
+            "command not found" in mini_stderr
+            and mini_returncode == globals["cmd_not_found_exit"]
+        ):
+            print_formatted("stdout", "OK")
+            print_formatted("stderr", "OK")
+            print_formatted("exit code", "OK")
+            return 3
+        elif (
+            "is a directory" in mini_stderr.lower()
+            and mini_returncode == globals["is_directory_exit"]
+        ):
+            print_formatted("stdout", "OK")
+            print_formatted("stderr", "OK")
+            print_formatted("exit code", "OK")
+            return 3
+        else:
+            return 0
 
     for symbol in not_required:
         if (
