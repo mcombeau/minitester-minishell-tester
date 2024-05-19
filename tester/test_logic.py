@@ -58,11 +58,11 @@ def is_stderr_exception(command, bash_stderr, mini_stderr):
     if "syntax error" in bash_stderr.lower() and "syntax error" in mini_stderr.lower():
         return True
 
-    if "||" in command or "&&" in command or "$$" in command:
-        return True
+    # if "||" in command or "&&" in command or "$$" in command:
+    #     return True
 
-    if ".:" in bash_stderr:
-        return True
+    # if ".:" in bash_stderr:
+    #     return True
 
     if bash_output in mini_stderr:
         return True
@@ -153,12 +153,78 @@ def output_files_ok():
     return all_files_ok
 
 
+def is_exceptional_command(command):
+    not_required = ["||", "&&"]
+
+    if command == ".":
+        print(
+            f"Note: '.' implementation not required in minishell: bash output differs; 'command not found' expected for minishell stderr"
+        )
+        return True
+
+    for symbol in not_required:
+        if symbol in command:
+            print(
+                f"Note: '{symbol}' implementation not required in minishell: bash output differs; 'syntax error' expected for minishell stderr"
+            )
+            return True
+
+    if "$$" in command:
+        print(
+            f"Note: '$$' implementation not required in minishell: bash output differs; '$$' expected for minishell stdout"
+        )
+        return True
+
+    return False
+
+
+def exceptional_command_ok(
+    command,
+    mini_stdout,
+    mini_stderr,
+    mini_returncode,
+    bash_stderr,
+    bash_returncode,
+):
+    not_required = ["||", "&&"]
+
+    if (
+        command == "."
+        and "command not found" in mini_stderr
+        and mini_returncode == globals["cmd_not_found_exit"]
+    ):
+        print_formatted("stdout", "OK")
+        print_formatted("stderr", "OK")
+        print_formatted("exit code", "OK")
+        return 3
+
+    for symbol in not_required:
+        if (
+            symbol in command
+            and "syntax error" in mini_stderr
+            and mini_returncode == globals["syntax_error_exit"]
+        ):
+            print_formatted("stdout", "OK")
+            print_formatted("stderr", "OK")
+            print_formatted("exit code", "OK")
+            return 3
+
+    if "$$" in command and "$$" in mini_stdout:
+        passed = 1
+        print_formatted("stdout", "OK")
+        passed += stderr_ok(command, bash_stderr, mini_stderr)
+        passed += returncode_ok(bash_returncode, mini_returncode)
+        return passed
+
+    return 0
+
+
 def test_command(command, no_env=False):
     globals["test_count"] += 1
+    passed = 0
     expected_passed = 3
 
     print_test_header(globals["test_count"], command)
-
     bash_stdout, bash_stderr, bash_returncode = run_command(
         command, bash_path, bash_dir, no_env=no_env
     )
@@ -166,11 +232,20 @@ def test_command(command, no_env=False):
         command, minishell_path, mini_dir, no_env=no_env
     )
 
-    passed = 0
+    if is_exceptional_command(command):
+        passed += exceptional_command_ok(
+            command,
+            mini_stdout,
+            mini_stderr,
+            mini_returncode,
+            bash_stderr,
+            bash_returncode,
+        )
+    else:
+        passed += stdout_ok(bash_stdout, mini_stdout)
+        passed += stderr_ok(command, bash_stderr, mini_stderr)
+        passed += returncode_ok(bash_returncode, mini_returncode)
 
-    passed += stdout_ok(bash_stdout, mini_stdout)
-    passed += stderr_ok(command, bash_stderr, mini_stderr)
-    passed += returncode_ok(bash_returncode, mini_returncode)
     if ">" in command or ">>" in command:
         expected_passed += 1
         passed += output_files_ok()
@@ -190,3 +265,4 @@ def run_tests(selected_blocks, test_blocks):
                 test_command(command, no_env=no_env)
         else:
             print(f"Test block {block} not found in test file.")
+            exit(2)

@@ -17,10 +17,11 @@ test_files = [
     "existing_file",
 ]
 
-
 globals = {
     "colored_output": False,
     "test_count": 0,
     "test_fail_count": 0,
     "test_pass_count": 0,
+    "cmd_not_found_exit": 127,
+    "syntax_error_exit": 2,
 }
