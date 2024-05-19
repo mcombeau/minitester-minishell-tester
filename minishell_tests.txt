@@ -658,12 +658,7 @@ echo 01234 >> forbidden_file | echo 56789 >> outfile1
 > >> <
 >> > <
 >> < >
-echo ABC > outfile1 | echo DEF >> outfile2
-echo GHI >> outfile1 | echo KLM > outfile2
-echo OPQ > outfile1 >> outfile2
-echo RST >> outfile1 > outfile2
-< valid_infile_1 cat | echo UVW > outfile1 | echo XYZ >> outfile2
-< valid_infile_1 cat > outfile1 | echo ABC >> outfile1 | echo DEF > outfile2
+echo hello > outfile1
 cat < outfile1 >
 cat < outfile1 >>
 cat < > outfile1
@@ -676,6 +671,12 @@ cat > outfile1 < outfile1
 cat >> outfile1 < outfile1
 cat < outfile1 > outfile1
 cat < outfile1 >> outfile1
+echo ABC > outfile1 | echo DEF >> outfile2
+echo GHI >> outfile1 | echo KLM > outfile2
+echo OPQ > outfile1 >> outfile2
+echo RST >> outfile1 > outfile2
+< valid_infile_1 cat | echo UVW > outfile1 | echo XYZ >> outfile2
+< valid_infile_1 cat > outfile1 | echo ABC >> outfile1 | echo DEF > outfile2
 < valid_infile_1 < valid_infile_2 cat > outfile1 >> outfile2
 < valid_infile_1 < valid_infile_2 cat >> outfile1 > outfile2
 < forbidden_file < valid_infile_2 cat > outfile1 >> outfile2
