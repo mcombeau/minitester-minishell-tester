@@ -100,7 +100,7 @@ To run the program:
 $ python3 minitester.py
 ```
 
-The tester runs the tests specified (one per line) in the `minishell_tests.txt` file. Each block of tests can be run independantly (see options below).
+The tester runs the tests specified (one per line) in the `minishell_tests.txt` file. Each block of tests can be run independently (see options below).
 
 ```bash
 usage: python3 minitester.py [-h] [-a] [-l] [-t TESTBLOCK] [-c]
