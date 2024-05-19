@@ -16,7 +16,11 @@ This tester compares your Minishell output (file output, standard output, standa
 
 If the output does not match, the tester displays the differences.
 
+Shell script tester:
 ![minitester execution gif](https://github.com/mcombeau/minitester-minishell-tester/blob/main/screenshots/minitester.gif)
+
+Python tester:
+![minitester execution python](https://github.com/mcombeau/minitester-minishell-tester/blob/main/screenshots/minitester-python.png)
 
 However, it does not test for memory leaks or for Norm errors. Some tests must still be performed manually, such as for signals and `ctrl-D` functionality, as well as for the heredoc.
 
