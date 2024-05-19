@@ -67,3 +67,20 @@ def print_test_header(test_count, command):
 def print_test_block_header(block_title):
     print("-" * 40)
     print(f"\n\n{block_title}\n\n")
+
+
+def print_minishell_not_found():
+    print(
+        """
+Minishell binary not found.
+
+Please build minishell and ensure that the minishell binary is executable.
+
+Check that the files are as follows:
+- minishell
+- minitester_dir
+   - minitester.py
+
+Or update the minishell_path in tester/config.py
+"""
+    )

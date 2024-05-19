@@ -1,3 +1,4 @@
+import os
 from tester import (
     print_test_block_options,
     run_tests,
@@ -6,6 +7,8 @@ from tester import (
     print_total,
     get_args,
     parse_test_file,
+    minishell_path,
+    print_minishell_not_found,
 )
 from tester.config import globals
 
@@ -13,6 +16,11 @@ from tester.config import globals
 def main():
     global colored_output
     argparser, args = get_args()
+
+    if not (os.path.isfile(minishell_path) and os.access(minishell_path, os.X_OK)):
+        print_minishell_not_found()
+        exit(2)
+
     test_blocks = parse_test_file("minishell_tests.txt")
 
     if args.list:
