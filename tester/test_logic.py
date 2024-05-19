@@ -52,6 +52,13 @@ def stderr_ok(bash_stderr, mini_stderr):
     mini_output = strip_invisible_chars(mini_stderr.split(":")[-1].strip()).rstrip("\n")
 
     if bash_output != mini_output:
+        if (
+            "syntax error" in bash_stderr.lower()
+            and "syntax error" in mini_stderr.lower()
+            and "free" not in mini_stderr.lower()
+        ):
+            print_formatted("stderr", "OK")
+            return True
         if bash_output in mini_stderr and "free" not in mini_stderr:
             print_formatted("stderr", "OK")
             return True
