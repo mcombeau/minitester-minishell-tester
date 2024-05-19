@@ -60,7 +60,7 @@ def is_stderr_exception(bash_stderr, mini_stderr):
         return True
 
 
-def stderr_ok(command, bash_stderr, mini_stderr):
+def stderr_ok(bash_stderr, mini_stderr):
     bash_output = strip_invisible_chars(bash_stderr.split(":")[-1].strip())
     mini_output = strip_invisible_chars(mini_stderr.split(":")[-1].strip()).rstrip("\n")
 
@@ -88,17 +88,17 @@ def returncode_ok(bash_returncode, mini_returncode):
 def compare_files(file1, file2):
     if os.path.exists(file1) and os.path.exists(file2):
         if not filecmp.cmp(file1, file2, shallow=False):
-            print(f"File content mismatch: {file1} vs {file2}")
+            print(f"--> File content mismatch: {file1} vs {file2}")
             with open(file1, "r") as f1, open(file2, "r") as f2:
                 content1 = f1.read()
                 content2 = f2.read()
-                print(f"{file1} content: {content1}")
-                print(f"{file2} content: {content2}")
+                print(f"--> {file1} content:\n{content1}")
+                print(f"--> {file2} content:\n{content2}")
                 return False
         else:
             return True
     else:
-        print(f"One or both files do not exist: {file1}, {file2}")
+        print(f"--> One or both files do not exist: {file1}, {file2}")
         return False
 
 
@@ -208,7 +208,7 @@ def exceptional_command_ok(
     if "$$" in command and "$$" in mini_stdout:
         passed = 1
         print_formatted("stdout", "OK")
-        passed += stderr_ok(command, bash_stderr, mini_stderr)
+        passed += stderr_ok(bash_stderr, mini_stderr)
         passed += returncode_ok(bash_returncode, mini_returncode)
         return passed
 
@@ -239,7 +239,7 @@ def test_command(command, no_env=False):
         )
     else:
         passed += stdout_ok(bash_stdout, mini_stdout)
-        passed += stderr_ok(command, bash_stderr, mini_stderr)
+        passed += stderr_ok(bash_stderr, mini_stderr)
         passed += returncode_ok(bash_returncode, mini_returncode)
 
     if ">" in command or ">>" in command:
