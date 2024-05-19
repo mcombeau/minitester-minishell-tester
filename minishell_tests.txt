@@ -522,8 +522,8 @@ exit | ls
 exit 42 | ls
 exit 12 abc | ls
 exit abc 12 | ls
-"ls > file | exit
-"ls -l > x | exit | wc -l
+ls > file | exit
+ls -l > x | exit | wc -l
 
 #exit-no-env
 unset PATH; exit
