@@ -146,7 +146,8 @@ def is_exceptional_command(command):
     not_required = ["||", "&&"]
 
     if "." in command:
-        return any(part.strip() == "." for part in command.split(";"))
+        has_special_dot = any(part.strip() == "." for part in command.split(";"))
+        return has_special_dot
 
     for symbol in not_required:
         if symbol in command:
@@ -169,6 +170,7 @@ def exceptional_command_ok(
     mini_stdout,
     mini_stderr,
     mini_returncode,
+    bash_stdout,
     bash_stderr,
     bash_returncode,
 ):
@@ -192,6 +194,12 @@ def exceptional_command_ok(
             print_formatted("exit code", "OK")
             return 3
         else:
+            print(f"Expected 'command not found' or 'is a directory' error")
+            passed = 0
+            passed += stdout_ok(bash_stdout, mini_stdout)
+            passed += stderr_ok(bash_stderr, mini_stderr)
+            passed += returncode_ok(bash_returncode, mini_returncode)
+
             return 0
 
     for symbol in not_required:
@@ -234,6 +242,7 @@ def test_command(command, no_env=False):
             mini_stdout,
             mini_stderr,
             mini_returncode,
+            bash_stdout,
             bash_stderr,
             bash_returncode,
         )
