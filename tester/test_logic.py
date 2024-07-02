@@ -18,6 +18,7 @@ from .config import (
 
 def run_command(command, shell_path, working_dir=None, no_env=False):
     env = {} if no_env else None
+    env.pop("CDPATH", None)
     try:
         result = subprocess.run(
             [shell_path, "-c", command], cwd=working_dir, capture_output=True, env=env
